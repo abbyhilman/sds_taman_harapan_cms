@@ -92,28 +92,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Informasi Sistem</CardTitle>
-          <CardDescription>
-            Informasi tentang sistem CMS SDS Taman Harapan
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-sm font-medium">Versi CMS</span>
-            <span className="text-sm text-muted-foreground">1.0.0</span>
-          </div>
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-sm font-medium">Framework</span>
-            <span className="text-sm text-muted-foreground">Next.js 13</span>
-          </div>
-          <div className="flex justify-between py-2">
-            <span className="text-sm font-medium">Database</span>
-            <span className="text-sm text-muted-foreground">Supabase PostgreSQL</span>
-          </div>
-        </CardContent>
-      </Card>
+      
     </div>
   );
 }
