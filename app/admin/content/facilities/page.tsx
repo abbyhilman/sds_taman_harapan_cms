@@ -1,15 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Loader2, Plus, Pencil, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 interface Facility {
   id: string;
@@ -29,10 +42,10 @@ export default function FacilitiesPage() {
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    image_url: '',
-    icon: '',
+    name: "",
+    description: "",
+    image_url: "",
+    icon: "",
     order_position: 0,
   });
 
@@ -43,17 +56,17 @@ export default function FacilitiesPage() {
   const fetchFacilities = async () => {
     try {
       const { data, error } = await supabase
-        .from('facilities')
-        .select('*')
-        .order('order_position', { ascending: true });
+        .from("facilities")
+        .select("*")
+        .order("order_position", { ascending: true });
 
       if (error) throw error;
       setFacilities(data || []);
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -66,31 +79,31 @@ export default function FacilitiesPage() {
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `facility-${Date.now()}.${fileExt}`;
       const filePath = `facilities/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('images')
+        .from("images")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("images").getPublicUrl(filePath);
 
       setFormData({ ...formData, image_url: publicUrl });
 
       toast({
-        title: 'Berhasil',
-        description: 'Gambar berhasil diunggah',
+        title: "Berhasil",
+        description: "Gambar berhasil diunggah",
       });
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     } finally {
       setUploading(false);
@@ -101,29 +114,27 @@ export default function FacilitiesPage() {
     try {
       if (editingFacility) {
         const { error } = await supabase
-          .from('facilities')
+          .from("facilities")
           .update({
             ...formData,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', editingFacility.id);
+          .eq("id", editingFacility.id);
 
         if (error) throw error;
 
         toast({
-          title: 'Berhasil',
-          description: 'Fasilitas berhasil diperbarui',
+          title: "Berhasil",
+          description: "Fasilitas berhasil diperbarui",
         });
       } else {
-        const { error } = await supabase
-          .from('facilities')
-          .insert([formData]);
+        const { error } = await supabase.from("facilities").insert([formData]);
 
         if (error) throw error;
 
         toast({
-          title: 'Berhasil',
-          description: 'Fasilitas berhasil ditambahkan',
+          title: "Berhasil",
+          description: "Fasilitas berhasil ditambahkan",
         });
       }
 
@@ -132,9 +143,9 @@ export default function FacilitiesPage() {
       fetchFacilities();
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     }
   };
@@ -152,37 +163,34 @@ export default function FacilitiesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus fasilitas ini?')) return;
+    if (!confirm("Apakah Anda yakin ingin menghapus fasilitas ini?")) return;
 
     try {
-      const { error } = await supabase
-        .from('facilities')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from("facilities").delete().eq("id", id);
 
       if (error) throw error;
 
       toast({
-        title: 'Berhasil',
-        description: 'Fasilitas berhasil dihapus',
+        title: "Berhasil",
+        description: "Fasilitas berhasil dihapus",
       });
 
       fetchFacilities();
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     }
   };
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      description: '',
-      image_url: '',
-      icon: '',
+      name: "",
+      description: "",
+      image_url: "",
+      icon: "",
       order_position: 0,
     });
     setEditingFacility(null);
@@ -201,24 +209,39 @@ export default function FacilitiesPage() {
       <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold mb-2">Fasilitas</h1>
-          <p className="text-muted-foreground">
-            Kelola fasilitas sekolah
-          </p>
+          <p className="text-muted-foreground">Kelola fasilitas sekolah</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) resetForm();
-        }}>
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Tambah Fasilitas
+            <Button
+              disabled={facilities.length >= 6}
+              title={
+                facilities.length >= 6
+                  ? "Anda telah mencapai batas maksimum 6 fasilitas"
+                  : "Tambah fasilitas baru"
+              }
+            >
+              {facilities.length >= 6 ? (
+                "Batas Maksimum Tercapai"
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Tambah Fasilitas
+                </>
+              )}
             </Button>
           </DialogTrigger>
+
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingFacility ? 'Edit Fasilitas' : 'Tambah Fasilitas Baru'}
+                {editingFacility ? "Edit Fasilitas" : "Tambah Fasilitas Baru"}
               </DialogTitle>
               <DialogDescription>
                 Isi informasi fasilitas di bawah ini
@@ -229,7 +252,9 @@ export default function FacilitiesPage() {
                 <Label>Nama Fasilitas</Label>
                 <Input
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Contoh: Laboratorium Komputer"
                 />
               </div>
@@ -237,7 +262,9 @@ export default function FacilitiesPage() {
                 <Label>Deskripsi</Label>
                 <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="Deskripsi fasilitas"
                   rows={4}
                 />
@@ -247,7 +274,12 @@ export default function FacilitiesPage() {
                 <Input
                   type="number"
                   value={formData.order_position}
-                  onChange={(e) => setFormData({ ...formData, order_position: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      order_position: parseInt(e.target.value),
+                    })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -259,11 +291,15 @@ export default function FacilitiesPage() {
                   disabled={uploading}
                 />
                 {formData.image_url && (
-                  <img src={formData.image_url} alt="Preview" className="w-full h-32 object-cover rounded" />
+                  <img
+                    src={formData.image_url}
+                    alt="Preview"
+                    className="w-full h-32 object-cover rounded"
+                  />
                 )}
               </div>
               <Button onClick={handleSubmit} className="w-full">
-                {editingFacility ? 'Perbarui' : 'Tambah'} Fasilitas
+                {editingFacility ? "Perbarui" : "Tambah"} Fasilitas
               </Button>
             </div>
           </DialogContent>

@@ -43,8 +43,10 @@ const menuItems: MenuItem[] = [
       { title: 'Beranda', href: '/admin/content/homepage' },
       { title: 'Tentang Kami', href: '/admin/content/about' },
       { title: 'Program Unggulan', href: '/admin/content/programs' },
+      { title: 'Program Tambahan', href: '/admin/content/learnsection' },
       { title: 'Fasilitas', href: '/admin/content/facilities' },
       { title: 'Prestasi', href: '/admin/content/achievements' },
+      { title: 'Kontak Pesan', href: '/admin/content/contactmessage' },
       { title: 'Berita', href: '/admin/content/news' },
     ],
   },
@@ -54,6 +56,8 @@ const menuItems: MenuItem[] = [
     submenu: [
       { title: 'Foto', href: '/admin/gallery/photos' },
       { title: 'Video', href: '/admin/gallery/videos' },
+      { title: 'Welcome Foto', href: '/admin/gallery/welcome_photos' },
+      { title: 'Tentang Kami Foto', href: '/admin/gallery/tentang_kami_photos' },
     ],
   },
 ];

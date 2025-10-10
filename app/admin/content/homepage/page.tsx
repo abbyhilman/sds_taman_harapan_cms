@@ -191,7 +191,7 @@ export default function HomepagePage() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Foto Hero Section</CardTitle>
             <CardDescription>
@@ -263,7 +263,7 @@ export default function HomepagePage() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
 
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={saving}>

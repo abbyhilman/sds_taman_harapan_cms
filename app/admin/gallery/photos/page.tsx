@@ -42,6 +42,8 @@ export default function PhotosPage() {
         .select('*')
         .order('order_position', { ascending: true });
 
+      console.log(data);
+
       if (error) throw error;
       setPhotos(data || []);
     } catch (error: any) {
