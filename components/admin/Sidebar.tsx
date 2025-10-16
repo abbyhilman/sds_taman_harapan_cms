@@ -47,7 +47,9 @@ const menuItems: MenuItem[] = [
       { title: 'Fasilitas', href: '/admin/content/facilities' },
       { title: 'Prestasi', href: '/admin/content/achievements' },
       { title: 'Kontak Pesan', href: '/admin/content/contactmessage' },
+      { title: 'Kontak Info', href: '/admin/content/contactinfo' },
       { title: 'Berita', href: '/admin/content/news' },
+      { title: 'Pendaftaran', href: '/admin/content/ppdb' },
     ],
   },
   {
