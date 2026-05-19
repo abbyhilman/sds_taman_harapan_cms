@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -42,12 +43,11 @@ interface Program {
 }
 
 export default function ProgramsPage() {
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -58,29 +58,75 @@ export default function ProgramsPage() {
     order_position: 0,
   });
 
-  useEffect(() => {
-    fetchPrograms();
-  }, []);
-
-  const fetchPrograms = async () => {
-    try {
+  // Fetch Programs
+  const { data: programs = [], isLoading } = useQuery({
+    queryKey: ["programs"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("programs")
         .select("*")
         .order("order_position", { ascending: true });
-
       if (error) throw error;
-      setPrograms(data || []);
-    } catch (error: any) {
+      return data as Program[];
+    },
+  });
+
+  // Mutation for Submit
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      if (editingProgram) {
+        const { error } = await supabase
+          .from("programs")
+          .update({
+            ...formData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editingProgram.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("programs").insert([formData]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      toast({
+        title: "Berhasil",
+        description: `Program berhasil ${editingProgram ? "diperbarui" : "ditambahkan"}`,
+      });
+      setDialogOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+
+  // Mutation for Delete
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("programs").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      toast({
+        title: "Berhasil",
+        description: "Program berhasil dihapus",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -122,46 +168,6 @@ export default function ProgramsPage() {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (editingProgram) {
-        const { error } = await supabase
-          .from("programs")
-          .update({
-            ...formData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", editingProgram.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Berhasil",
-          description: "Program berhasil diperbarui",
-        });
-      } else {
-        const { error } = await supabase.from("programs").insert([formData]);
-
-        if (error) throw error;
-
-        toast({
-          title: "Berhasil",
-          description: "Program berhasil ditambahkan",
-        });
-      }
-
-      setDialogOpen(false);
-      resetForm();
-      fetchPrograms();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleEdit = (program: Program) => {
     setEditingProgram(program);
     setFormData({
@@ -173,29 +179,6 @@ export default function ProgramsPage() {
       order_position: program.order_position,
     });
     setDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus program ini?")) return;
-
-    try {
-      const { error } = await supabase.from("programs").delete().eq("id", id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Berhasil",
-        description: "Program berhasil dihapus",
-      });
-
-      fetchPrograms();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
   };
 
   const resetForm = () => {
@@ -210,7 +193,7 @@ export default function ProgramsPage() {
     setEditingProgram(null);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -220,7 +203,7 @@ export default function ProgramsPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Program Unggulan</h1>
           <p className="text-muted-foreground">
@@ -230,13 +213,13 @@ export default function ProgramsPage() {
         <Dialog
           open={dialogOpen}
           onOpenChange={(open) => {
-            if (open && programs.length >= 4) {
+            if (open && !editingProgram && programs.length >= 4) {
               toast({
                 title: "Batas Tercapai",
                 description: "Maksimal hanya boleh 4 program unggulan.",
                 variant: "destructive",
               });
-              return; // batalkan pembukaan dialog
+              return;
             }
             setDialogOpen(open);
             if (!open) resetForm();
@@ -329,7 +312,12 @@ export default function ProgramsPage() {
                   />
                 )}
               </div>
-              <Button onClick={handleSubmit} className="w-full">
+              <Button 
+                onClick={() => submitMutation.mutate()} 
+                className="w-full"
+                disabled={submitMutation.isPending || uploading}
+              >
+                {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {editingProgram ? "Perbarui" : "Tambah"} Program
               </Button>
             </div>
@@ -368,7 +356,12 @@ export default function ProgramsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(program.id)}
+                  onClick={() => {
+                    if (confirm("Apakah Anda yakin ingin menghapus program ini?")) {
+                      deleteMutation.mutate(program.id);
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </Button>

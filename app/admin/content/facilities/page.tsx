@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -34,12 +35,11 @@ interface Facility {
 }
 
 export default function FacilitiesPage() {
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingFacility, setEditingFacility] = useState<Facility | null>(null);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -49,29 +49,75 @@ export default function FacilitiesPage() {
     order_position: 0,
   });
 
-  useEffect(() => {
-    fetchFacilities();
-  }, []);
-
-  const fetchFacilities = async () => {
-    try {
+  // Fetch Facilities
+  const { data: facilities = [], isLoading } = useQuery({
+    queryKey: ["facilities"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("facilities")
         .select("*")
         .order("order_position", { ascending: true });
-
       if (error) throw error;
-      setFacilities(data || []);
-    } catch (error: any) {
+      return data as Facility[];
+    },
+  });
+
+  // Mutation for Submit
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      if (editingFacility) {
+        const { error } = await supabase
+          .from("facilities")
+          .update({
+            ...formData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editingFacility.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("facilities").insert([formData]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facilities"] });
+      toast({
+        title: "Berhasil",
+        description: `Fasilitas berhasil ${editingFacility ? "diperbarui" : "ditambahkan"}`,
+      });
+      setDialogOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+
+  // Mutation for Delete
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("facilities").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facilities"] });
+      toast({
+        title: "Berhasil",
+        description: "Fasilitas berhasil dihapus",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -110,46 +156,6 @@ export default function FacilitiesPage() {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (editingFacility) {
-        const { error } = await supabase
-          .from("facilities")
-          .update({
-            ...formData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", editingFacility.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Berhasil",
-          description: "Fasilitas berhasil diperbarui",
-        });
-      } else {
-        const { error } = await supabase.from("facilities").insert([formData]);
-
-        if (error) throw error;
-
-        toast({
-          title: "Berhasil",
-          description: "Fasilitas berhasil ditambahkan",
-        });
-      }
-
-      setDialogOpen(false);
-      resetForm();
-      fetchFacilities();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleEdit = (facility: Facility) => {
     setEditingFacility(facility);
     setFormData({
@@ -160,29 +166,6 @@ export default function FacilitiesPage() {
       order_position: facility.order_position,
     });
     setDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus fasilitas ini?")) return;
-
-    try {
-      const { error } = await supabase.from("facilities").delete().eq("id", id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Berhasil",
-        description: "Fasilitas berhasil dihapus",
-      });
-
-      fetchFacilities();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
   };
 
   const resetForm = () => {
@@ -196,7 +179,7 @@ export default function FacilitiesPage() {
     setEditingFacility(null);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -206,7 +189,7 @@ export default function FacilitiesPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Fasilitas</h1>
           <p className="text-muted-foreground">Kelola fasilitas sekolah</p>
@@ -298,7 +281,12 @@ export default function FacilitiesPage() {
                   />
                 )}
               </div>
-              <Button onClick={handleSubmit} className="w-full">
+              <Button 
+                onClick={() => submitMutation.mutate()} 
+                className="w-full"
+                disabled={submitMutation.isPending || uploading}
+              >
+                {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {editingFacility ? "Perbarui" : "Tambah"} Fasilitas
               </Button>
             </div>
@@ -334,7 +322,12 @@ export default function FacilitiesPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(facility.id)}
+                  onClick={() => {
+                    if (confirm("Apakah Anda yakin ingin menghapus fasilitas ini?")) {
+                      deleteMutation.mutate(facility.id);
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </Button>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,12 +19,11 @@ interface Photo {
 }
 
 export default function PhotosPage() {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     image_url: '',
@@ -31,38 +31,60 @@ export default function PhotosPage() {
     order_position: 0,
   });
 
-  useEffect(() => {
-    fetchPhotos();
-  }, []);
-
-  const fetchPhotos = async () => {
-    try {
+  // Fetch Photos
+  const { data: photos = [], isLoading } = useQuery({
+    queryKey: ['gallery_photos'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('gallery_photos')
         .select('*')
         .order('order_position', { ascending: true });
-
-      console.log(data);
-
       if (error) throw error;
-      setPhotos(data || []);
-    } catch (error: any) {
+      return data as Photo[];
+    },
+  });
+
+  // Mutation for single Submit
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      if (editingPhoto) {
+        const { error } = await supabase
+          .from('gallery_photos')
+          .update({
+            caption: formData.caption,
+            order_position: formData.order_position,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingPhoto.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('gallery_photos')
+          .insert([formData]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gallery_photos'] });
+      toast({
+        title: 'Berhasil',
+        description: `Foto berhasil ${editingPhoto ? 'diperbarui' : 'ditambahkan'}`,
+      });
+      setDialogOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
-  const handleMultipleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploading(true);
-    try {
+  // Mutation for Multi Upload
+  const multiUploadMutation = useMutation({
+    mutationFn: async (files: FileList) => {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const fileExt = file.name.split('.').pop();
@@ -85,22 +107,52 @@ export default function PhotosPage() {
           order_position: photos.length + i,
         }]);
       }
-
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['gallery_photos'] });
       toast({
         title: 'Berhasil',
-        description: `${files.length} foto berhasil diunggah`,
+        description: `${variables.length} foto berhasil diunggah`,
       });
-
-      fetchPhotos();
-    } catch (error: any) {
+      setUploading(false);
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
       setUploading(false);
-    }
+    },
+  });
+
+  // Mutation for Delete
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('gallery_photos').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gallery_photos'] });
+      toast({
+        title: 'Berhasil',
+        description: 'Foto berhasil dihapus',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleMultipleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    multiUploadMutation.mutate(files);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,49 +192,6 @@ export default function PhotosPage() {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (editingPhoto) {
-        const { error } = await supabase
-          .from('gallery_photos')
-          .update({
-            caption: formData.caption,
-            order_position: formData.order_position,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingPhoto.id);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Berhasil',
-          description: 'Foto berhasil diperbarui',
-        });
-      } else {
-        const { error } = await supabase
-          .from('gallery_photos')
-          .insert([formData]);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Berhasil',
-          description: 'Foto berhasil ditambahkan',
-        });
-      }
-
-      setDialogOpen(false);
-      resetForm();
-      fetchPhotos();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleEdit = (photo: Photo) => {
     setEditingPhoto(photo);
     setFormData({
@@ -191,32 +200,6 @@ export default function PhotosPage() {
       order_position: photo.order_position,
     });
     setDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus foto ini?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('gallery_photos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Berhasil',
-        description: 'Foto berhasil dihapus',
-      });
-
-      fetchPhotos();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
   };
 
   const resetForm = () => {
@@ -228,7 +211,7 @@ export default function PhotosPage() {
     setEditingPhoto(null);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -238,14 +221,14 @@ export default function PhotosPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Galeri Foto</h1>
           <p className="text-muted-foreground">
             Kelola koleksi foto sekolah
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Input
             type="file"
             accept="image/*"
@@ -330,7 +313,12 @@ export default function PhotosPage() {
                 {editingPhoto && (
                   <img src={formData.image_url} alt="Current" className="w-full h-48 object-cover rounded" />
                 )}
-                <Button onClick={handleSubmit} className="w-full" disabled={!editingPhoto && !formData.image_url}>
+                <Button 
+                  onClick={() => submitMutation.mutate()} 
+                  className="w-full" 
+                  disabled={submitMutation.isPending || (!editingPhoto && !formData.image_url)}
+                >
+                  {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {editingPhoto ? 'Perbarui' : 'Tambah'} Foto
                 </Button>
               </div>
@@ -359,7 +347,12 @@ export default function PhotosPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => handleDelete(photo.id)}
+                  onClick={() => {
+                    if (confirm('Apakah Anda yakin ingin menghapus foto ini?')) {
+                      deleteMutation.mutate(photo.id);
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </Button>

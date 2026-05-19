@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,13 +24,12 @@ interface Video {
 }
 
 export default function VideosPage() {
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadType, setUploadType] = useState<'file' | 'embed'>('embed');
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -40,29 +40,77 @@ export default function VideosPage() {
     order_position: 0,
   });
 
-  useEffect(() => {
-    fetchVideos();
-  }, []);
-
-  const fetchVideos = async () => {
-    try {
+  // Fetch Videos
+  const { data: videos = [], isLoading } = useQuery({
+    queryKey: ['gallery_videos'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('gallery_videos')
         .select('*')
         .order('order_position', { ascending: true });
-
       if (error) throw error;
-      setVideos(data || []);
-    } catch (error: any) {
+      return data as Video[];
+    },
+  });
+
+  // Mutation for Submit
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      if (editingVideo) {
+        const { error } = await supabase
+          .from('gallery_videos')
+          .update({
+            ...formData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingVideo.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('gallery_videos')
+          .insert([formData]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gallery_videos'] });
+      toast({
+        title: 'Berhasil',
+        description: `Video berhasil ${editingVideo ? 'perbarui' : 'ditambahkan'}`,
+      });
+      setDialogOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+
+  // Mutation for Delete
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('gallery_videos').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gallery_videos'] });
+      toast({
+        title: 'Berhasil',
+        description: 'Video berhasil dihapus',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -138,48 +186,6 @@ export default function VideosPage() {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (editingVideo) {
-        const { error } = await supabase
-          .from('gallery_videos')
-          .update({
-            ...formData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingVideo.id);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Berhasil',
-          description: 'Video berhasil diperbarui',
-        });
-      } else {
-        const { error } = await supabase
-          .from('gallery_videos')
-          .insert([formData]);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Berhasil',
-          description: 'Video berhasil ditambahkan',
-        });
-      }
-
-      setDialogOpen(false);
-      resetForm();
-      fetchVideos();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleEdit = (video: Video) => {
     setEditingVideo(video);
     setFormData({
@@ -192,32 +198,6 @@ export default function VideosPage() {
     });
     setUploadType(video.embed_url ? 'embed' : 'file');
     setDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus video ini?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('gallery_videos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Berhasil',
-        description: 'Video berhasil dihapus',
-      });
-
-      fetchVideos();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
   };
 
   const resetForm = () => {
@@ -238,7 +218,7 @@ export default function VideosPage() {
     return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -248,7 +228,7 @@ export default function VideosPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Galeri Video</h1>
           <p className="text-muted-foreground">
@@ -348,7 +328,12 @@ export default function VideosPage() {
                 />
               </div>
 
-              <Button onClick={handleSubmit} className="w-full">
+              <Button 
+                onClick={() => submitMutation.mutate()} 
+                className="w-full" 
+                disabled={submitMutation.isPending || uploading}
+              >
+                {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {editingVideo ? 'Perbarui' : 'Tambah'} Video
               </Button>
             </div>
@@ -399,7 +384,12 @@ export default function VideosPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(video.id)}
+                  onClick={() => {
+                    if (confirm('Apakah Anda yakin ingin menghapus video ini?')) {
+                      deleteMutation.mutate(video.id);
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </Button>

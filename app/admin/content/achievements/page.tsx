@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,12 +21,11 @@ interface Achievement {
 }
 
 export default function AchievementsPage() {
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const currentYear = new Date().getFullYear();
 
@@ -36,29 +36,77 @@ export default function AchievementsPage() {
     image_url: '',
   });
 
-  useEffect(() => {
-    fetchAchievements();
-  }, []);
-
-  const fetchAchievements = async () => {
-    try {
+  // Fetch Achievements
+  const { data: achievements = [], isLoading } = useQuery({
+    queryKey: ['achievements'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('achievements')
         .select('*')
         .order('year', { ascending: false });
-
       if (error) throw error;
-      setAchievements(data || []);
-    } catch (error: any) {
+      return data as Achievement[];
+    },
+  });
+
+  // Mutation for Submit
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      if (editingAchievement) {
+        const { error } = await supabase
+          .from('achievements')
+          .update({
+            ...formData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingAchievement.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('achievements')
+          .insert([formData]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['achievements'] });
+      toast({
+        title: 'Berhasil',
+        description: `Prestasi berhasil ${editingAchievement ? 'diperbarui' : 'ditambahkan'}`,
+      });
+      setDialogOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+
+  // Mutation for Delete
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('achievements').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['achievements'] });
+      toast({
+        title: 'Berhasil',
+        description: 'Prestasi berhasil dihapus',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -97,48 +145,6 @@ export default function AchievementsPage() {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (editingAchievement) {
-        const { error } = await supabase
-          .from('achievements')
-          .update({
-            ...formData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingAchievement.id);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Berhasil',
-          description: 'Prestasi berhasil diperbarui',
-        });
-      } else {
-        const { error } = await supabase
-          .from('achievements')
-          .insert([formData]);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Berhasil',
-          description: 'Prestasi berhasil ditambahkan',
-        });
-      }
-
-      setDialogOpen(false);
-      resetForm();
-      fetchAchievements();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleEdit = (achievement: Achievement) => {
     setEditingAchievement(achievement);
     setFormData({
@@ -148,32 +154,6 @@ export default function AchievementsPage() {
       image_url: achievement.image_url,
     });
     setDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus prestasi ini?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('achievements')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Berhasil',
-        description: 'Prestasi berhasil dihapus',
-      });
-
-      fetchAchievements();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
   };
 
   const resetForm = () => {
@@ -186,7 +166,7 @@ export default function AchievementsPage() {
     setEditingAchievement(null);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -196,7 +176,7 @@ export default function AchievementsPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Prestasi</h1>
           <p className="text-muted-foreground">
@@ -260,7 +240,12 @@ export default function AchievementsPage() {
                   <img src={formData.image_url} alt="Preview" className="w-full h-32 object-cover rounded" />
                 )}
               </div>
-              <Button onClick={handleSubmit} className="w-full">
+              <Button 
+                onClick={() => submitMutation.mutate()} 
+                className="w-full"
+                disabled={submitMutation.isPending || uploading}
+              >
+                {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {editingAchievement ? 'Perbarui' : 'Tambah'} Prestasi
               </Button>
             </div>
@@ -300,7 +285,12 @@ export default function AchievementsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(achievement.id)}
+                  onClick={() => {
+                    if (confirm('Apakah Anda yakin ingin menghapus prestasi ini?')) {
+                      deleteMutation.mutate(achievement.id);
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </Button>

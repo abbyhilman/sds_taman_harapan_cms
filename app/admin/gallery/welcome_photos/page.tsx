@@ -230,7 +230,7 @@ export default function WelcomePhotosPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Foto Welcome</h1>
           <p className="text-muted-foreground">

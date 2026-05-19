@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +11,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Plus, Trash2, Upload } from 'lucide-react';
 
-export default function LearningSectionPage() {
-  const [section, setSection] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
+interface LearningSection {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  images: { image_url: string }[];
+}
 
+export default function LearningSectionPage() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -23,28 +30,70 @@ export default function LearningSectionPage() {
     images: [] as { image_url: string }[],
   });
 
-  // Ambil data pertama kali
+  // Fetch Section Data
+  const { data: section, isLoading } = useQuery({
+    queryKey: ['learning_section'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('learning_section')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data as LearningSection;
+    },
+  });
+
+  // Sync local state
   useEffect(() => {
-    fetchSection();
-  }, []);
-
-  const fetchSection = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('learning_section')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error && error.code !== 'PGRST116') {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      setSection(data);
-      if (data) setFormData(data);
+    if (section) {
+      setFormData(section);
     }
-    setLoading(false);
-  };
+  }, [section]);
+
+  // Mutation for saving
+  const saveMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      if (section) {
+        const { error } = await supabase
+          .from('learning_section')
+          .update({
+            ...payload,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', section.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('learning_section').insert([payload]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['learning_section'] });
+      toast({ title: 'Berhasil', description: 'Data disimpan.' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  // Mutation for deleting
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!section) return;
+      const { error } = await supabase.from('learning_section').delete().eq('id', section.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['learning_section'] });
+      toast({ title: 'Dihapus', description: 'Data berhasil dihapus.' });
+      setFormData({ title: '', description: '', tags: [], images: [] });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
 
   const uploadImage = async (file: File) => {
     const fileExt = file.name.split('.').pop();
@@ -65,7 +114,6 @@ export default function LearningSectionPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Batasi maksimum 2 gambar
     if (formData.images.length >= 2) {
       toast({
         title: 'Batas Gambar Tercapai',
@@ -87,45 +135,6 @@ export default function LearningSectionPage() {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setUploading(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        tags: formData.tags,
-        images: formData.images,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (section) {
-        const { error } = await supabase.from('learning_section').update(payload).eq('id', section.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('learning_section').insert([payload]);
-        if (error) throw error;
-      }
-
-      toast({ title: 'Berhasil', description: 'Data disimpan.' });
-      fetchSection();
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!section) return;
-    if (!confirm('Yakin ingin menghapus data ini?')) return;
-    try {
-      const { error } = await supabase.from('learning_section').delete().eq('id', section.id);
-      if (error) throw error;
-      toast({ title: 'Dihapus', description: 'Data berhasil dihapus.' });
-      setFormData({ title: '', description: '', tags: [], images: [] });
-      setSection(null);
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -164,7 +173,7 @@ export default function LearningSectionPage() {
     }));
   };
 
-  if (loading)
+  if (isLoading)
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -174,17 +183,20 @@ export default function LearningSectionPage() {
   return (
     <div className="p-6 lg:p-8">
       <Card>
-        <CardHeader className="flex justify-between items-center">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Pembelajaran yang Menyenangkan & Bermakna</CardTitle>
           {section && (
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button 
+              variant="destructive" 
+              onClick={() => confirm('Yakin ingin menghapus data ini?') && deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+            >
               <Trash2 className="w-4 h-4 mr-2" /> Hapus
             </Button>
           )}
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Title */}
           <div className="space-y-2">
             <Label>Judul</Label>
             <Input
@@ -194,7 +206,6 @@ export default function LearningSectionPage() {
             />
           </div>
 
-          {/* Description */}
           <div className="space-y-2">
             <Label>Deskripsi</Label>
             <Textarea
@@ -205,7 +216,6 @@ export default function LearningSectionPage() {
             />
           </div>
 
-          {/* Tags */}
           <div className="space-y-2">
             <Label>Tags (maks. 4)</Label>
             <div className="flex gap-2 mb-2 flex-wrap">
@@ -232,13 +242,16 @@ export default function LearningSectionPage() {
             />
           </div>
 
-          {/* Images */}
           <div className="space-y-3">
             <Label>Gambar (maks. 2)</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {formData.images.map((img, i) => (
                 <div key={i} className="relative">
-                  <img src={img.image_url} className="w-full h-40 object-cover rounded-lg" />
+                  <img
+                    src={img.image_url}
+                    alt={`Gambar pembelajaran ${i + 1}`}
+                    className="w-full h-40 object-cover rounded-lg"
+                  />
                   <button
                     onClick={() => handleImageRemove(img.image_url)}
                     className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"
@@ -248,7 +261,6 @@ export default function LearningSectionPage() {
                 </div>
               ))}
 
-              {/* Upload Button */}
               {formData.images.length < 2 && (
                 <label className="border-2 border-dashed rounded-lg flex flex-col items-center justify-center h-40 cursor-pointer hover:bg-gray-50">
                   <Upload className="w-6 h-6 mb-2" />
@@ -265,8 +277,12 @@ export default function LearningSectionPage() {
             </div>
           </div>
 
-          {/* Save Button */}
-          <Button onClick={handleSubmit} className="w-full" disabled={uploading}>
+          <Button 
+            onClick={() => saveMutation.mutate(formData)} 
+            className="w-full" 
+            disabled={saveMutation.isPending || uploading}
+          >
+            {saveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {section ? 'Perbarui' : 'Simpan'} Data
           </Button>
         </CardContent>

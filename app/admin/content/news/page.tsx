@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,12 +23,11 @@ interface News {
 }
 
 export default function NewsPage() {
-  const [news, setNews] = useState<News[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingNews, setEditingNews] = useState<News | null>(null);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -37,29 +37,77 @@ export default function NewsPage() {
     author: '',
   });
 
-  useEffect(() => {
-    fetchNews();
-  }, []);
-
-  const fetchNews = async () => {
-    try {
+  // Fetch News using TanStack Query
+  const { data: news = [], isLoading } = useQuery({
+    queryKey: ['news'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('news')
         .select('*')
         .order('published_date', { ascending: false });
-
       if (error) throw error;
-      setNews(data || []);
-    } catch (error: any) {
+      return data as News[];
+    },
+  });
+
+  // Mutation for Adding/Updating News
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      if (editingNews) {
+        const { error } = await supabase
+          .from('news')
+          .update({
+            ...formData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingNews.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('news')
+          .insert([formData]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['news'] });
+      toast({
+        title: 'Berhasil',
+        description: `Berita berhasil ${editingNews ? 'diperbarui' : 'ditambahkan'}`,
+      });
+      setDialogOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+
+  // Mutation for Deleting News
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('news').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['news'] });
+      toast({
+        title: 'Berhasil',
+        description: 'Berita berhasil dihapus',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,48 +146,6 @@ export default function NewsPage() {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (editingNews) {
-        const { error } = await supabase
-          .from('news')
-          .update({
-            ...formData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingNews.id);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Berhasil',
-          description: 'Berita berhasil diperbarui',
-        });
-      } else {
-        const { error } = await supabase
-          .from('news')
-          .insert([formData]);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Berhasil',
-          description: 'Berita berhasil ditambahkan',
-        });
-      }
-
-      setDialogOpen(false);
-      resetForm();
-      fetchNews();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleEdit = (newsItem: News) => {
     setEditingNews(newsItem);
     setFormData({
@@ -150,32 +156,6 @@ export default function NewsPage() {
       author: newsItem.author,
     });
     setDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus berita ini?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('news')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Berhasil',
-        description: 'Berita berhasil dihapus',
-      });
-
-      fetchNews();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
   };
 
   const resetForm = () => {
@@ -189,7 +169,7 @@ export default function NewsPage() {
     setEditingNews(null);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -199,7 +179,7 @@ export default function NewsPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Berita</h1>
           <p className="text-muted-foreground">
@@ -271,7 +251,12 @@ export default function NewsPage() {
                   <img src={formData.thumbnail_url} alt="Preview" className="w-full h-48 object-cover rounded" />
                 )}
               </div>
-              <Button onClick={handleSubmit} className="w-full">
+              <Button 
+                onClick={() => submitMutation.mutate()} 
+                className="w-full"
+                disabled={submitMutation.isPending || uploading}
+              >
+                {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {editingNews ? 'Perbarui' : 'Tambah'} Berita
               </Button>
             </div>
@@ -316,7 +301,12 @@ export default function NewsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(newsItem.id)}
+                  onClick={() => {
+                    if (confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
+                      deleteMutation.mutate(newsItem.id);
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </Button>

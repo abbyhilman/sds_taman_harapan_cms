@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input'; // Menggunakan Input untuk field teks biasa
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -22,72 +23,65 @@ interface ContactInfo {
 }
 
 export default function ContactInfoCMS() {
-  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [localContactInfo, setLocalContactInfo] = useState<ContactInfo | null>(null);
 
-  useEffect(() => {
-    fetchContactInfo();
-  }, []);
-
-  const fetchContactInfo = async () => {
-    try {
+  // Fetch Contact Info
+  const { data: contactInfo, isLoading } = useQuery({
+    queryKey: ['contact_info'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('contact_info')
         .select('*')
         .maybeSingle();
-
       if (error) throw error;
-      if (data) setContactInfo(data);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+      return data as ContactInfo;
+    },
+  });
+
+  // Sync local state when data is fetched
+  useEffect(() => {
+    if (contactInfo) {
+      setLocalContactInfo(contactInfo);
     }
-  };
+  }, [contactInfo]);
 
-  const handleSave = async () => {
-    if (!contactInfo) return;
-
-    setSaving(true);
-    try {
+  // Mutation for saving
+  const saveMutation = useMutation({
+    mutationFn: async (updatedData: ContactInfo) => {
       const { error } = await supabase
         .from('contact_info')
         .update({
-          address_line1: contactInfo.address_line1,
-          address_line2: contactInfo.address_line2,
-          phone: contactInfo.phone,
-          email1: contactInfo.email1,
-          email2: contactInfo.email2,
-          operating_hours: contactInfo.operating_hours,
-          operating_hours_subtext: contactInfo.operating_hours_subtext,
+          address_line1: updatedData.address_line1,
+          address_line2: updatedData.address_line2,
+          phone: updatedData.phone,
+          email1: updatedData.email1,
+          email2: updatedData.email2,
+          operating_hours: updatedData.operating_hours,
+          operating_hours_subtext: updatedData.operating_hours_subtext,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', contactInfo.id);
-
+        .eq('id', updatedData.id);
       if (error) throw error;
-
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contact_info'] });
       toast({
         title: 'Berhasil',
         description: 'Data Kontak berhasil disimpan',
       });
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -116,9 +110,9 @@ export default function ContactInfoCMS() {
                 <Label htmlFor="address_line1">Alamat Baris 1</Label>
                 <Input
                   id="address_line1"
-                  value={contactInfo?.address_line1 || ''}
+                  value={localContactInfo?.address_line1 || ''}
                   onChange={(e) =>
-                    setContactInfo(contactInfo ? { ...contactInfo, address_line1: e.target.value } : null)
+                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, address_line1: e.target.value } : null)
                   }
                   placeholder="Masukkan alamat baris 1"
                 />
@@ -127,9 +121,9 @@ export default function ContactInfoCMS() {
                 <Label htmlFor="address_line2">Alamat Baris 2 (Opsional)</Label>
                 <Input
                   id="address_line2"
-                  value={contactInfo?.address_line2 || ''}
+                  value={localContactInfo?.address_line2 || ''}
                   onChange={(e) =>
-                    setContactInfo(contactInfo ? { ...contactInfo, address_line2: e.target.value } : null)
+                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, address_line2: e.target.value } : null)
                   }
                   placeholder="Masukkan alamat baris 2 (opsional)"
                 />
@@ -146,9 +140,9 @@ export default function ContactInfoCMS() {
           <CardContent>
             <Input
               id="phone"
-              value={contactInfo?.phone || ''}
+              value={localContactInfo?.phone || ''}
               onChange={(e) =>
-                setContactInfo(contactInfo ? { ...contactInfo, phone: e.target.value } : null)
+                setLocalContactInfo(localContactInfo ? { ...localContactInfo, phone: e.target.value } : null)
               }
               placeholder="Masukkan nomor telepon"
             />
@@ -167,9 +161,9 @@ export default function ContactInfoCMS() {
                 <Input
                   id="email1"
                   type="email"
-                  value={contactInfo?.email1 || ''}
+                  value={localContactInfo?.email1 || ''}
                   onChange={(e) =>
-                    setContactInfo(contactInfo ? { ...contactInfo, email1: e.target.value } : null)
+                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, email1: e.target.value } : null)
                   }
                   placeholder="Masukkan email utama"
                 />
@@ -179,9 +173,9 @@ export default function ContactInfoCMS() {
                 <Input
                   id="email2"
                   type="email"
-                  value={contactInfo?.email2 || ''}
+                  value={localContactInfo?.email2 || ''}
                   onChange={(e) =>
-                    setContactInfo(contactInfo ? { ...contactInfo, email2: e.target.value } : null)
+                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, email2: e.target.value } : null)
                   }
                   placeholder="Masukkan email sekunder (opsional)"
                 />
@@ -201,9 +195,9 @@ export default function ContactInfoCMS() {
                 <Label htmlFor="operating_hours">Jam Operasional</Label>
                 <Textarea
                   id="operating_hours"
-                  value={contactInfo?.operating_hours || ''}
+                  value={localContactInfo?.operating_hours || ''}
                   onChange={(e) =>
-                    setContactInfo(contactInfo ? { ...contactInfo, operating_hours: e.target.value } : null)
+                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, operating_hours: e.target.value } : null)
                   }
                   placeholder="Masukkan jam operasional"
                   rows={3}
@@ -213,9 +207,9 @@ export default function ContactInfoCMS() {
                 <Label htmlFor="operating_hours_subtext">Keterangan Tambahan (Opsional)</Label>
                 <Textarea
                   id="operating_hours_subtext"
-                  value={contactInfo?.operating_hours_subtext || ''}
+                  value={localContactInfo?.operating_hours_subtext || ''}
                   onChange={(e) =>
-                    setContactInfo(contactInfo ? { ...contactInfo, operating_hours_subtext: e.target.value } : null)
+                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, operating_hours_subtext: e.target.value } : null)
                   }
                   placeholder="Masukkan keterangan tambahan (opsional)"
                   rows={3}
@@ -226,8 +220,11 @@ export default function ContactInfoCMS() {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
+          <Button 
+            onClick={() => localContactInfo && saveMutation.mutate(localContactInfo)} 
+            disabled={saveMutation.isPending}
+          >
+            {saveMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Menyimpan...

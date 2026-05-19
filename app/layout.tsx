@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from '@/components/ui/toaster';
+import QueryProvider from '@/components/QueryProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -13,6 +14,9 @@ export const metadata: Metadata = {
     shortcut: "/logo_tamhar.png",
     apple: "/logo_tamhar.png",
   },
+  other: {
+    'content-security-policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://*.supabase.co;",
+  },
 };
 
 export default function RootLayout({
@@ -23,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className={inter.className}>
-        {children}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
         <Toaster />
       </body>
     </html>

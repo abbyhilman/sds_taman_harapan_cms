@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -17,68 +18,61 @@ interface AboutUs {
 }
 
 export default function AboutPage() {
-  const [about, setAbout] = useState<AboutUs | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [localAbout, setLocalAbout] = useState<AboutUs | null>(null);
 
-  useEffect(() => {
-    fetchAbout();
-  }, []);
-
-  const fetchAbout = async () => {
-    try {
+  // Fetch About Data
+  const { data: about, isLoading } = useQuery({
+    queryKey: ['about_us'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('about_us')
         .select('*')
         .maybeSingle();
-
       if (error) throw error;
-      if (data) setAbout(data);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+      return data as AboutUs;
+    },
+  });
+
+  // Sync local state when data is fetched
+  useEffect(() => {
+    if (about) {
+      setLocalAbout(about);
     }
-  };
+  }, [about]);
 
-  const handleSave = async () => {
-    if (!about) return;
-
-    setSaving(true);
-    try {
+  // Mutation for saving
+  const saveMutation = useMutation({
+    mutationFn: async (updatedData: AboutUs) => {
       const { error } = await supabase
         .from('about_us')
         .update({
-          vision: about.vision,
-          mission: about.mission,
-          description: about.description,
+          vision: updatedData.vision,
+          mission: updatedData.mission,
+          description: updatedData.description,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', about.id);
-
+        .eq('id', updatedData.id);
       if (error) throw error;
-
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['about_us'] });
       toast({
         title: 'Berhasil',
         description: 'Data Tentang Kami berhasil disimpan',
       });
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -105,9 +99,9 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent>
             <Textarea
-              value={about?.vision || ''}
+              value={localAbout?.vision || ''}
               onChange={(e) =>
-                setAbout(about ? { ...about, vision: e.target.value } : null)
+                setLocalAbout(localAbout ? { ...localAbout, vision: e.target.value } : null)
               }
               placeholder="Masukkan visi sekolah"
               rows={4}
@@ -124,9 +118,9 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent>
             <Textarea
-              value={about?.mission || ''}
+              value={localAbout?.mission || ''}
               onChange={(e) =>
-                setAbout(about ? { ...about, mission: e.target.value } : null)
+                setLocalAbout(localAbout ? { ...localAbout, mission: e.target.value } : null)
               }
               placeholder="Masukkan misi sekolah"
               rows={6}
@@ -143,9 +137,9 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent>
             <Textarea
-              value={about?.description || ''}
+              value={localAbout?.description || ''}
               onChange={(e) =>
-                setAbout(about ? { ...about, description: e.target.value } : null)
+                setLocalAbout(localAbout ? { ...localAbout, description: e.target.value } : null)
               }
               placeholder="Masukkan deskripsi sekolah"
               rows={6}
@@ -154,8 +148,11 @@ export default function AboutPage() {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
+          <Button 
+            onClick={() => localAbout && saveMutation.mutate(localAbout)} 
+            disabled={saveMutation.isPending}
+          >
+            {saveMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Menyimpan...

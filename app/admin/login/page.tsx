@@ -40,8 +40,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50 p-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="min-h-screen overflow-x-hidden flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50 p-4">
+      <Card className="w-full max-w-[22rem] sm:max-w-md shadow-xl">
         <CardHeader className="space-y-4 flex flex-col items-center">
           <div className="w-24 h-24 relative">
             <Image

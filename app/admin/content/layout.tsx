@@ -10,9 +10,9 @@ export default function ContentLayout({
 }) {
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen bg-[#f8fbff]">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-[#f8fbff] pt-14 lg:pt-0">
           {children}
         </main>
       </div>

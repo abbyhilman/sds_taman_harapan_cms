@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,77 +19,70 @@ interface HomepageSettings {
 }
 
 export default function HomepagePage() {
-  const [settings, setSettings] = useState<HomepageSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [localSettings, setLocalSettings] = useState<HomepageSettings | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
+  // Fetch Settings
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['homepage_settings'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('homepage_settings')
         .select('*')
         .maybeSingle();
-
       if (error) throw error;
-
       if (data) {
-        setSettings({
+        return {
           ...data,
           hero_images: Array.isArray(data.hero_images) ? data.hero_images : [],
-        });
+        } as HomepageSettings;
       }
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+      return null;
+    },
+  });
+
+  // Sync local state
+  useEffect(() => {
+    if (settings) {
+      setLocalSettings(settings);
     }
-  };
+  }, [settings]);
 
-  const handleSave = async () => {
-    if (!settings) return;
-
-    setSaving(true);
-    try {
+  // Mutation for saving
+  const saveMutation = useMutation({
+    mutationFn: async (updatedData: HomepageSettings) => {
       const { error } = await supabase
         .from('homepage_settings')
         .update({
-          welcome_title: settings.welcome_title,
-          welcome_description: settings.welcome_description,
-          hero_images: settings.hero_images,
+          welcome_title: updatedData.welcome_title,
+          welcome_description: updatedData.welcome_description,
+          hero_images: updatedData.hero_images,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', settings.id);
-
+        .eq('id', updatedData.id);
       if (error) throw error;
-
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['homepage_settings'] });
       toast({
         title: 'Berhasil',
         description: 'Pengaturan beranda berhasil disimpan',
       });
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+  });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0 || !settings) return;
+    if (!files || files.length === 0 || !localSettings) return;
 
     setUploading(true);
     try {
@@ -113,9 +107,9 @@ export default function HomepagePage() {
         uploadedUrls.push(publicUrl);
       }
 
-      setSettings({
-        ...settings,
-        hero_images: [...settings.hero_images, ...uploadedUrls],
+      setLocalSettings({
+        ...localSettings,
+        hero_images: [...localSettings.hero_images, ...uploadedUrls],
       });
 
       toast({
@@ -134,12 +128,12 @@ export default function HomepagePage() {
   };
 
   const removeImage = (index: number) => {
-    if (!settings) return;
-    const newImages = settings.hero_images.filter((_, i) => i !== index);
-    setSettings({ ...settings, hero_images: newImages });
+    if (!localSettings) return;
+    const newImages = localSettings.hero_images.filter((_, i) => i !== index);
+    setLocalSettings({ ...localSettings, hero_images: newImages });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -169,9 +163,9 @@ export default function HomepagePage() {
               <Label htmlFor="title">Judul Sambutan</Label>
               <Input
                 id="title"
-                value={settings?.welcome_title || ''}
+                value={localSettings?.welcome_title || ''}
                 onChange={(e) =>
-                  setSettings(settings ? { ...settings, welcome_title: e.target.value } : null)
+                  setLocalSettings(localSettings ? { ...localSettings, welcome_title: e.target.value } : null)
                 }
                 placeholder="Selamat Datang di SDS Taman Harapan"
               />
@@ -180,9 +174,9 @@ export default function HomepagePage() {
               <Label htmlFor="description">Deskripsi</Label>
               <Textarea
                 id="description"
-                value={settings?.welcome_description || ''}
+                value={localSettings?.welcome_description || ''}
                 onChange={(e) =>
-                  setSettings(settings ? { ...settings, welcome_description: e.target.value } : null)
+                  setLocalSettings(localSettings ? { ...localSettings, welcome_description: e.target.value } : null)
                 }
                 placeholder="Deskripsi singkat tentang sekolah"
                 rows={4}
@@ -191,83 +185,12 @@ export default function HomepagePage() {
           </CardContent>
         </Card>
 
-        {/* <Card>
-          <CardHeader>
-            <CardTitle>Foto Hero Section</CardTitle>
-            <CardDescription>
-              Upload foto-foto untuk ditampilkan di bagian utama
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                disabled={uploading}
-                className="hidden"
-                id="hero-upload"
-              />
-              <Label htmlFor="hero-upload">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={uploading}
-                  onClick={() => document.getElementById('hero-upload')?.click()}
-                  asChild
-                >
-                  <span>
-                    {uploading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Mengunggah...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Foto
-                      </>
-                    )}
-                  </span>
-                </Button>
-              </Label>
-            </div>
-
-            {settings && settings.hero_images.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {settings.hero_images.map((url, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Hero ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                    <button
-                      onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {settings && settings.hero_images.length === 0 && (
-              <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Belum ada foto. Upload foto untuk ditampilkan.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card> */}
-
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
+          <Button 
+            onClick={() => localSettings && saveMutation.mutate(localSettings)} 
+            disabled={saveMutation.isPending}
+          >
+            {saveMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Menyimpan...

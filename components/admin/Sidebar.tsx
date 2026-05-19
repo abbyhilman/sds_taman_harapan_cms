@@ -84,16 +84,16 @@ export function Sidebar() {
     <>
       <div className="p-6 border-b">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 relative">
+          <div className="w-12 h-12 relative rounded-lg bg-[#eefbff] p-2 shadow-sm">
             <Image
               src="/logo_tamhar.png"
               alt="Logo"
               fill
-              className="object-contain"
+              className="object-contain p-1.5"
             />
           </div>
           <div>
-            <h2 className="font-bold text-lg">Admin Panel</h2>
+            <h2 className="font-bold text-lg tracking-tight">Admin Panel</h2>
             <p className="text-xs text-muted-foreground">SDS Taman Harapan</p>
           </div>
         </div>
@@ -107,10 +107,10 @@ export function Sidebar() {
                 href={item.href}
                 onClick={() => setIsMobileOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
                   pathname === item.href
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-accent'
+                    ? 'bg-slate-950 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
                 )}
               >
                 <item.icon className="w-5 h-5" />
@@ -120,7 +120,7 @@ export function Sidebar() {
               <>
                 <button
                   onClick={() => toggleMenu(item.title)}
-                  className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+                  className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950 transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className="w-5 h-5" />
@@ -134,17 +134,17 @@ export function Sidebar() {
                   />
                 </button>
                 {openMenus.includes(item.title) && item.submenu && (
-                  <div className="ml-8 mt-1 space-y-1">
+                  <div className="ml-6 mt-1 space-y-1 border-l border-slate-100 pl-3">
                     {item.submenu.map((subitem) => (
                       <Link
                         key={subitem.href}
                         href={subitem.href}
                         onClick={() => setIsMobileOpen(false)}
                         className={cn(
-                          'block px-3 py-2 rounded-lg text-sm transition-colors',
+                          'block px-3 py-2 rounded-lg text-sm transition-all',
                           pathname === subitem.href
-                            ? 'bg-primary text-primary-foreground'
-                            : 'hover:bg-accent'
+                            ? 'bg-cyan-50 font-semibold text-cyan-700'
+                            : 'text-slate-500 hover:bg-slate-100 hover:text-slate-950'
                         )}
                       >
                         {subitem.title}
@@ -158,15 +158,15 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t">
-        <div className="mb-3 px-3">
+      <div className="p-4 border-t bg-slate-50/70">
+        <div className="mb-3 rounded-lg bg-white px-3 py-2 shadow-sm">
           <p className="text-sm font-medium truncate">{user?.email}</p>
           <p className="text-xs text-muted-foreground">Administrator</p>
         </div>
         <Button
           onClick={handleSignOut}
           variant="outline"
-          className="w-full justify-start"
+          className="w-full justify-start border-slate-200 bg-white hover:bg-slate-100"
         >
           <LogOut className="w-4 h-4 mr-2" />
           Keluar
@@ -180,13 +180,13 @@ export function Sidebar() {
       <Button
         variant="ghost"
         size="icon"
-        className="lg:hidden fixed top-4 left-4 z-50"
+        className="lg:hidden fixed top-4 right-4 z-50 bg-white shadow-sm hover:bg-slate-100"
         onClick={() => setIsMobileOpen(!isMobileOpen)}
       >
         {isMobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </Button>
 
-      <aside className="hidden lg:flex lg:flex-col w-64 border-r bg-card h-screen sticky top-0">
+      <aside className="hidden lg:flex lg:flex-col w-64 border-r border-slate-100 bg-white h-screen sticky top-0 shadow-sm">
         <SidebarContent />
       </aside>
 
@@ -196,7 +196,7 @@ export function Sidebar() {
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={() => setIsMobileOpen(false)}
           />
-          <aside className="fixed left-0 top-0 bottom-0 w-64 border-r bg-card z-50 flex flex-col lg:hidden">
+          <aside className="fixed left-0 top-0 bottom-0 w-72 max-w-[82vw] border-r border-slate-100 bg-white z-50 flex flex-col lg:hidden shadow-xl">
             <SidebarContent />
           </aside>
         </>

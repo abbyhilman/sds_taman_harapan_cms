@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Mail, Phone, Trash2, Reply } from "lucide-react";
 import {
@@ -25,71 +25,66 @@ interface ContactMessage {
 }
 
 export default function ContactMessagesPage() {
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchMessages();
-  }, []);
-
-  const fetchMessages = async () => {
-    try {
+  // Fetch Messages
+  const { data: messages = [], isLoading } = useQuery({
+    queryKey: ["contact_messages"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("contact_messages")
         .select("*")
         .order("created_at", { ascending: false });
-
       if (error) throw error;
-      setMessages(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data as ContactMessage[];
+    },
+  });
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Hapus pesan ini secara permanen?")) return;
-    try {
+  // Mutation for Delete
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("contact_messages")
         .delete()
         .eq("id", id);
       if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact_messages"] });
       toast({ title: "Dihapus", description: "Pesan berhasil dihapus." });
-      fetchMessages();
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-  const markAsReplied = async (id: string) => {
-    try {
+  // Mutation for mark as replied
+  const replyMutation = useMutation({
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("contact_messages")
         .update({ replied: true })
         .eq("id", id);
       if (error) throw error;
-      fetchMessages();
-    } catch (error: any) {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact_messages"] });
+    },
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-  if (loading)
+  if (isLoading)
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="w-6 h-6 animate-spin" />
@@ -143,7 +138,8 @@ export default function ContactMessagesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => markAsReplied(msg.id)}
+                    onClick={() => replyMutation.mutate(msg.id)}
+                    disabled={replyMutation.isPending}
                   >
                     <Reply className="w-4 h-4 mr-1" />
                     Balas via Email
@@ -166,7 +162,12 @@ export default function ContactMessagesPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(msg.id)}
+                  onClick={() => {
+                    if (confirm("Hapus pesan ini secara permanen?")) {
+                      deleteMutation.mutate(msg.id);
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </Button>
