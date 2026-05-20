@@ -7,12 +7,7 @@ import {
   Home,
   FileText,
   Image as ImageIcon,
-  Video,
-  Users,
-  Award,
-  Building,
-  Newspaper,
-  Info,
+  GraduationCap,
   ChevronDown,
   LogOut,
   Menu,
@@ -25,7 +20,7 @@ import Image from 'next/image';
 
 interface MenuItem {
   title: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   href?: string;
   submenu?: { title: string; href: string }[];
 }
@@ -53,6 +48,15 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
+    title: 'Akademik',
+    icon: GraduationCap,
+    submenu: [
+      { title: 'Daftar Siswa', href: '/admin/students' },
+      { title: 'Raport Digital', href: '/admin/report-cards' },
+      { title: 'Master Data', href: '/admin/master-data' },
+    ],
+  },
+  {
     title: 'Galeri Media',
     icon: ImageIcon,
     submenu: [
@@ -67,7 +71,7 @@ const menuItems: MenuItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const { signOut, user } = useAuth();
-  const [openMenus, setOpenMenus] = useState<string[]>(['Konten Website', 'Galeri Media']);
+  const [openMenus, setOpenMenus] = useState<string[]>(['Konten Website', 'Akademik', 'Galeri Media']);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const toggleMenu = (title: string) => {
