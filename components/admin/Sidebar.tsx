@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface MenuItem {
@@ -71,13 +71,21 @@ const menuItems: MenuItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const { signOut, user } = useAuth();
-  const [openMenus, setOpenMenus] = useState<string[]>(['Konten Website', 'Akademik', 'Galeri Media']);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  // Auto-open menu based on current path
+  useEffect(() => {
+    for (const item of menuItems) {
+      if (item.submenu?.some(sub => pathname.startsWith(sub.href))) {
+        setOpenMenu(item.title);
+        break;
+      }
+    }
+  }, [pathname]);
+
   const toggleMenu = (title: string) => {
-    setOpenMenus((prev) =>
-      prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]
-    );
+    setOpenMenu((prev) => (prev === title ? null : title));
   };
 
   const handleSignOut = async () => {
@@ -133,11 +141,11 @@ export function Sidebar() {
                   <ChevronDown
                     className={cn(
                       'w-4 h-4 transition-transform',
-                      openMenus.includes(item.title) && 'rotate-180'
+                      openMenu === item.title && 'rotate-180'
                     )}
                   />
                 </button>
-                {openMenus.includes(item.title) && item.submenu && (
+                {openMenu === item.title && item.submenu && (
                   <div className="ml-6 mt-1 space-y-1 border-l border-slate-100 pl-3">
                     {item.submenu.map((subitem) => (
                       <Link

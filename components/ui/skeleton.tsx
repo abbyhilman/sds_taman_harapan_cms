@@ -1,15 +1,7 @@
-import { cn } from '@/lib/utils';
+﻿import { AnimatedSkeleton, type AnimatedSkeletonProps } from '@/components/ui/animated-skeleton';
 
-function Skeleton({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn('animate-pulse rounded-md bg-muted', className)}
-      {...props}
-    />
-  );
+function Skeleton(props: AnimatedSkeletonProps) {
+  return <AnimatedSkeleton {...props} />;
 }
 
 export { Skeleton };

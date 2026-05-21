@@ -1,0 +1,34 @@
+﻿<svg width="720" height="520" viewBox="0 0 720 520" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Ilustrasi halaman tidak ditemukan SDS Taman Harapan</title>
+  <desc id="desc">Ilustrasi ramah bertema sekolah dengan papan 404, buku, dan ornamen biru cyan.</desc>
+  <rect width="720" height="520" rx="40" fill="#F8FBFF"/>
+  <circle cx="126" cy="108" r="62" fill="#CFFAFE" opacity="0.9"/>
+  <circle cx="608" cy="116" r="74" fill="#DBEAFE" opacity="0.75"/>
+  <circle cx="610" cy="414" r="54" fill="#FEF3C7" opacity="0.75"/>
+  <path d="M98 407C147 337 222 315 296 352C356 382 416 386 485 348C551 312 612 332 650 392" stroke="#BAE6FD" stroke-width="24" stroke-linecap="round" opacity="0.75"/>
+  <rect x="183" y="124" width="354" height="230" rx="28" fill="white" stroke="#E2E8F0" stroke-width="4"/>
+  <rect x="213" y="153" width="294" height="58" rx="16" fill="#ECFEFF"/>
+  <text x="360" y="198" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="800" fill="#0F172A">404</text>
+  <text x="360" y="254" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" fill="#0E7490">Halaman Tidak Ditemukan</text>
+  <text x="360" y="289" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="500" fill="#64748B">Sepertinya rute yang kamu buka belum tersedia.</text>
+  <rect x="274" y="322" width="172" height="12" rx="6" fill="#E0F2FE"/>
+  <rect x="242" y="360" width="236" height="18" rx="9" fill="#0EA5E9" opacity="0.18"/>
+  <rect x="254" y="346" width="212" height="18" rx="9" fill="#06B6D4" opacity="0.24"/>
+  <g transform="translate(112 292)">
+    <rect x="0" y="72" width="116" height="26" rx="8" fill="#0F172A" opacity="0.12"/>
+    <rect x="14" y="20" width="86" height="76" rx="10" fill="#38BDF8"/>
+    <rect x="26" y="8" width="86" height="76" rx="10" fill="#FBBF24"/>
+    <rect x="40" y="23" width="48" height="7" rx="3.5" fill="white" opacity="0.85"/>
+    <rect x="40" y="39" width="34" height="7" rx="3.5" fill="white" opacity="0.65"/>
+  </g>
+  <g transform="translate(512 296)">
+    <rect x="0" y="91" width="110" height="22" rx="8" fill="#0F172A" opacity="0.1"/>
+    <path d="M54 10L102 92H6L54 10Z" fill="#22C55E" opacity="0.9"/>
+    <path d="M54 39V68" stroke="white" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="54" cy="81" r="5" fill="white"/>
+  </g>
+  <path d="M176 111L193 128L227 87" stroke="#06B6D4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  <path d="M535 78L553 96M553 78L535 96" stroke="#F59E0B" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  <path d="M127 184C138 171 153 171 164 184" stroke="#0EA5E9" stroke-width="8" stroke-linecap="round" opacity="0.45"/>
+  <path d="M574 209C590 194 609 194 625 209" stroke="#0EA5E9" stroke-width="8" stroke-linecap="round" opacity="0.45"/>
+</svg>

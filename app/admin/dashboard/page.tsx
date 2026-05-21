@@ -1,15 +1,6 @@
-'use client';
+﻿'use client';
 
 import { useMemo } from 'react';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import {
   Award,
@@ -27,10 +18,11 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+
+import { MiniAreaChart, PpdbDonutChart } from '@/components/admin/DashboardCharts';
 
 interface Stats {
   programs: number;
@@ -41,6 +33,7 @@ interface Stats {
   videos: number;
   registrations: number;
   acceptedRegistrations: number;
+  activeStudents: number;
 }
 
 const emptyStats: Stats = {
@@ -52,6 +45,7 @@ const emptyStats: Stats = {
   videos: 0,
   registrations: 0,
   acceptedRegistrations: 0,
+  activeStudents: 0,
 };
 
 const getErrorMessage = (error: unknown) =>
@@ -95,6 +89,7 @@ export default function DashboardPage() {
         videos,
         registrations,
         acceptedRegistrations,
+        activeStudents,
       ] = await Promise.all([
         getCount('programs'),
         getCount('facilities'),
@@ -104,6 +99,7 @@ export default function DashboardPage() {
         getCount('gallery_videos'),
         getCount('ppdb_registrations'),
         getCount('ppdb_registrations', { column: 'status', value: 'diterima' }),
+        getCount('students', { column: 'status', value: 'active' }),
       ]);
 
       return {
@@ -115,6 +111,7 @@ export default function DashboardPage() {
         videos,
         registrations,
         acceptedRegistrations,
+        activeStudents,
       };
     },
   });
@@ -131,22 +128,22 @@ export default function DashboardPage() {
         data: buildSeries(stats.registrations, 1),
       },
       {
-        title: 'Konten Website',
-        value: stats.programs + stats.facilities + stats.news,
-        helper: `${stats.news} berita aktif`,
+        title: 'Data Siswa',
+        value: stats.activeStudents,
+        helper: 'siswa aktif terdaftar',
+        icon: UserRound,
+        color: '#10b981',
+        fill: 'rgba(16, 185, 129, 0.18)',
+        data: buildSeries(stats.activeStudents, 2),
+      },
+      {
+        title: 'Konten & Galeri',
+        value: stats.programs + stats.facilities + stats.news + stats.photos + stats.videos,
+        helper: `${stats.news} berita, ${stats.photos} foto, ${stats.videos} video`,
         icon: Newspaper,
         color: '#f59e0b',
         fill: 'rgba(245, 158, 11, 0.22)',
-        data: buildSeries(stats.programs + stats.facilities + stats.news, 2),
-      },
-      {
-        title: 'Media Galeri',
-        value: stats.photos + stats.videos,
-        helper: `${stats.photos} foto, ${stats.videos} video`,
-        icon: Camera,
-        color: '#ef4444',
-        fill: 'rgba(239, 68, 68, 0.18)',
-        data: buildSeries(stats.photos + stats.videos, 3),
+        data: buildSeries(stats.programs + stats.facilities + stats.news + stats.photos + stats.videos, 3),
       },
     ],
     [stats]
@@ -178,10 +175,6 @@ export default function DashboardPage() {
               year: 'numeric',
             }).format(new Date())}
           </Badge>
-          <Button className="rounded-full bg-pink-500 hover:bg-pink-600">Share</Button>
-          <Button className="rounded-full bg-amber-400 text-amber-950 hover:bg-amber-500">
-            More Details
-          </Button>
         </div>
       </div>
 
@@ -222,48 +215,20 @@ export default function DashboardPage() {
         <Card className="border-0 bg-white shadow-sm">
           <CardHeader className="flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-base">Kesehatan PPDB</CardTitle>
-              <p className="text-sm text-muted-foreground">Perbandingan total pendaftar dan siswa diterima.</p>
+              <CardTitle className="text-base">Status PPDB</CardTitle>
+              <p className="text-sm text-muted-foreground">Komposisi pendaftar diterima dan menunggu proses.</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
               <UserRound className="h-5 w-5" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={[
-                    { label: 'Total', total: stats.registrations, accepted: stats.acceptedRegistrations },
-                    { label: 'Aktif', total: Math.max(stats.registrations - stats.acceptedRegistrations, 0), accepted: stats.acceptedRegistrations },
-                    { label: 'Diterima', total: stats.acceptedRegistrations, accepted: stats.acceptedRegistrations },
-                  ]}
-                  margin={{ left: 0, right: 8, top: 10, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="label" tickLine={false} axisLine={false} />
-                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={28} />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    stroke="#06b6d4"
-                    fill="rgba(6, 182, 212, 0.18)"
-                    strokeWidth={3}
-                    animationDuration={1000}
-                    animationEasing="ease-in-out"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="accepted"
-                    stroke="#10b981"
-                    fill="rgba(16, 185, 129, 0.15)"
-                    strokeWidth={3}
-                    animationDuration={1200}
-                    animationEasing="ease-in-out"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="grid gap-4 lg:grid-cols-[240px_1fr] lg:items-center">
+              <PpdbDonutChart
+                total={stats.registrations}
+                accepted={stats.acceptedRegistrations}
+                loading={isLoading}
+              />
             </div>
           </CardContent>
         </Card>
@@ -309,28 +274,16 @@ function SmoothStatCard({
       </CardHeader>
       <CardContent className="pt-3">
         <div className="h-[118px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ left: 0, right: 0, top: 16, bottom: 0 }}>
-              <defs>
-                <linearGradient id={`fill-${title.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={color} stopOpacity={0.35} />
-                  <stop offset="95%" stopColor={color} stopOpacity={0.03} />
-                </linearGradient>
-              </defs>
-              <Area
-                type="monotone"
-                dataKey="total"
-                stroke={color}
-                fill={`url(#fill-${title.replace(/\s+/g, '-')})`}
-                strokeWidth={3}
-                dot={false}
-                animationDuration={1100}
-                animationEasing="ease-in-out"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <MiniAreaChart title={title} color={color} data={data} />
         </div>
       </CardContent>
     </Card>
   );
 }
+
+
+
+
+
+
+

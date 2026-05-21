@@ -1,7 +1,7 @@
-import Image from 'next/image';
+﻿import Image from 'next/image';
 import Link from 'next/link';
 import { LockKeyhole, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { AnimatedButton } from '@/components/ui/animated-button';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function Home() {
@@ -31,14 +31,16 @@ export default function Home() {
             Halaman ini khusus untuk admin sekolah mengelola konten website dan
             data pendaftaran PPDB.
           </p>
-          <Button className="mt-7 w-full" size="lg" asChild>
+          <AnimatedButton className="mt-7 w-full" size="lg" asChild>
             <Link href="/admin/login">
               <LockKeyhole className="mr-2 h-4 w-4" />
               Masuk Admin
             </Link>
-          </Button>
+          </AnimatedButton>
         </CardContent>
       </Card>
     </main>
   );
 }
+
+

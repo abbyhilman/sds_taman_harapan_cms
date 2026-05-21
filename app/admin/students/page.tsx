@@ -476,7 +476,7 @@ export default function StudentsPage() {
   );
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen space-y-6 bg-[#f8fbff] p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-sm font-medium text-cyan-700">Akademik</p>
@@ -506,7 +506,7 @@ export default function StudentsPage() {
         <MetricCard title="Perempuan" value={overview.female} icon={Users} tone="rose" />
       </div>
 
-      <Card>
+      <Card className="border-0 bg-white shadow-sm">
         <CardHeader>
           <CardTitle>Daftar Siswa</CardTitle>
           <CardDescription>
@@ -974,22 +974,26 @@ function MetricCard({
   icon: React.ComponentType<{ className?: string }>;
   tone: "cyan" | "emerald" | "blue" | "rose";
 }) {
-  const toneClass = {
-    cyan: "bg-cyan-50 text-cyan-700",
-    emerald: "bg-emerald-50 text-emerald-700",
-    blue: "bg-blue-50 text-blue-700",
-    rose: "bg-rose-50 text-rose-700",
+  const toneStyles = {
+    cyan: { bg: "bg-cyan-50", text: "text-cyan-700", accent: "#06b6d4" },
+    emerald: { bg: "bg-emerald-50", text: "text-emerald-700", accent: "#10b981" },
+    blue: { bg: "bg-blue-50", text: "text-blue-700", accent: "#3b82f6" },
+    rose: { bg: "bg-rose-50", text: "text-rose-700", accent: "#f43f5e" },
   }[tone];
 
   return (
-    <Card>
-      <CardContent className="flex items-center justify-between p-5">
-        <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-slate-950">{value}</p>
+    <Card className="border-0 bg-white shadow-lg shadow-slate-100">
+      <CardContent className="flex items-center gap-4 p-5">
+        <div
+          className={cn("flex h-14 w-14 items-center justify-center rounded-full", toneStyles.bg)}
+        >
+          <Icon className={cn("h-7 w-7", toneStyles.text)} />
         </div>
-        <div className={cn("flex h-12 w-12 items-center justify-center rounded-full", toneClass)}>
-          <Icon className="h-5 w-5" />
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <p className="mt-1 text-3xl font-bold tabular-nums" style={{ color: toneStyles.accent }}>
+            {value}
+          </p>
         </div>
       </CardContent>
     </Card>
