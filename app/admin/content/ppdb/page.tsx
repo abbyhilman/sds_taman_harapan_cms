@@ -890,7 +890,7 @@ export default function PPDBSettingsCMS() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={statusChartConfig} className="mx-auto h-[300px]">
+                <ChartContainer config={statusChartConfig} className="mx-auto h-[300px] w-full max-w-[300px]">
                   <PieChart accessibilityLayer>
                     <ChartTooltip
                       content={<ChartTooltipContent nameKey="label" hideLabel />}
