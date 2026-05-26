@@ -1,18 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  CalendarDays,
-  Database,
-  Loader2,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+import { AlertCircle, CalendarDays, Database, Loader2, MoreHorizontal, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { PageLoading } from "@/components/ui/loading";
+import { staggerContainer, staggerItem, fadeInDown } from "@/components/ui/animated";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -357,20 +350,27 @@ export default function MasterDataPage() {
     },
   });
 
-  return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-      <div>
-        <p className="text-sm font-medium text-cyan-700">Akademik</p>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-          Master Data Akademik
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Kelola tahun ajaran, mata pelajaran, dan ekstrakurikuler yang dipakai
-          pada modul raport digital.
-        </p>
-      </div>
+  const isInitialLoading = academicYearsQuery.isLoading && subjectsQuery.isLoading && extracurricularsQuery.isLoading;
 
-      <div className="grid gap-4 md:grid-cols-3">
+  if (isInitialLoading) {
+    return <div className="min-h-screen bg-[#f8fbff] p-6"><PageLoading text="Memuat master data..." /></div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f8fbff] p-4 sm:p-6 lg:p-8">
+      <motion.div className="space-y-6" initial="hidden" animate="show" variants={staggerContainer}>
+        <motion.div variants={fadeInDown}>
+          <p className="text-sm font-medium text-cyan-700">Akademik</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950">
+            Master Data Akademik
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Kelola tahun ajaran, mata pelajaran, dan ekstrakurikuler yang dipakai
+            pada modul raport digital.
+          </p>
+        </motion.div>
+
+        <motion.div className="grid gap-4 md:grid-cols-3" variants={staggerItem}>
         <SummaryCard
           title="Tahun Ajaran"
           value={academicYearsQuery.data?.length ?? 0}
@@ -386,9 +386,10 @@ export default function MasterDataPage() {
           value={extracurricularsQuery.data?.length ?? 0}
           icon={Sparkles}
         />
-      </div>
+        </motion.div>
 
-      <Tabs defaultValue="academic-years" className="space-y-4">
+        <motion.div variants={staggerItem}>
+        <Tabs defaultValue="academic-years" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3 lg:w-[560px]">
           <TabsTrigger value="academic-years">Tahun Ajaran</TabsTrigger>
           <TabsTrigger value="subjects">Mata Pelajaran</TabsTrigger>
@@ -632,6 +633,7 @@ export default function MasterDataPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      </motion.div>
 
       <Dialog open={academicYearDialog} onOpenChange={setAcademicYearDialog}>
         <DialogContent>
@@ -843,6 +845,7 @@ export default function MasterDataPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </motion.div>
     </div>
   );
 }

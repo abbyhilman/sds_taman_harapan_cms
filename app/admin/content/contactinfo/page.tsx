@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2 } from 'lucide-react';
+import { Phone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { PageLoading } from '@/components/ui/loading';
+import { staggerContainer, staggerItem, fadeInDown } from '@/components/ui/animated';
 
 interface ContactInfo {
   id: string;
@@ -27,214 +30,88 @@ export default function ContactInfoCMS() {
   const queryClient = useQueryClient();
   const [localContactInfo, setLocalContactInfo] = useState<ContactInfo | null>(null);
 
-  // Fetch Contact Info
   const { data: contactInfo, isLoading } = useQuery({
     queryKey: ['contact_info'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contact_info')
-        .select('*')
-        .maybeSingle();
+      const { data, error } = await supabase.from('contact_info').select('*').maybeSingle();
       if (error) throw error;
       return data as ContactInfo;
     },
   });
 
-  // Sync local state when data is fetched
-  useEffect(() => {
-    if (contactInfo) {
-      setLocalContactInfo(contactInfo);
-    }
-  }, [contactInfo]);
+  useEffect(() => { if (contactInfo) setLocalContactInfo(contactInfo); }, [contactInfo]);
 
-  // Mutation for saving
   const saveMutation = useMutation({
     mutationFn: async (updatedData: ContactInfo) => {
-      const { error } = await supabase
-        .from('contact_info')
-        .update({
-          address_line1: updatedData.address_line1,
-          address_line2: updatedData.address_line2,
-          phone: updatedData.phone,
-          email1: updatedData.email1,
-          email2: updatedData.email2,
-          operating_hours: updatedData.operating_hours,
-          operating_hours_subtext: updatedData.operating_hours_subtext,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', updatedData.id);
+      const { error } = await supabase.from('contact_info').update({
+        address_line1: updatedData.address_line1,
+        address_line2: updatedData.address_line2,
+        phone: updatedData.phone,
+        email1: updatedData.email1,
+        email2: updatedData.email2,
+        operating_hours: updatedData.operating_hours,
+        operating_hours_subtext: updatedData.operating_hours_subtext,
+        updated_at: new Date().toISOString(),
+      }).eq('id', updatedData.id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contact_info'] });
-      toast({
-        title: 'Berhasil',
-        description: 'Data Kontak berhasil disimpan',
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['contact_info'] }); toast({ title: 'Berhasil', description: 'Data Kontak berhasil disimpan' }); },
+    onError: (error: Error) => toast({ title: 'Error', description: error.message, variant: 'destructive' }),
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
-  }
+  if (isLoading) return <div className="min-h-screen bg-[#f8fbff] p-6"><PageLoading text="Memuat informasi kontak..." /></div>;
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Kelola Informasi Kontak</h1>
-        <p className="text-muted-foreground">
-          Perbarui informasi kontak sekolah seperti alamat, telepon, email, dan jam operasional
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#f8fbff] p-4 sm:p-6 lg:p-8">
+      <motion.div className="mx-auto max-w-4xl space-y-6" initial="hidden" animate="show" variants={staggerContainer}>
+        <motion.div variants={fadeInDown}>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl flex items-center gap-2"><Phone className="h-7 w-7 text-cyan-600" /> Informasi Kontak</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Perbarui informasi kontak sekolah</p>
+        </motion.div>
 
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Alamat</CardTitle>
-            <CardDescription>Alamat utama sekolah</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="address_line1">Alamat Baris 1</Label>
-                <Input
-                  id="address_line1"
-                  value={localContactInfo?.address_line1 || ''}
-                  onChange={(e) =>
-                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, address_line1: e.target.value } : null)
-                  }
-                  placeholder="Masukkan alamat baris 1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="address_line2">Alamat Baris 2 (Opsional)</Label>
-                <Input
-                  id="address_line2"
-                  value={localContactInfo?.address_line2 || ''}
-                  onChange={(e) =>
-                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, address_line2: e.target.value } : null)
-                  }
-                  placeholder="Masukkan alamat baris 2 (opsional)"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div variants={staggerItem}>
+          <Card className="border-0 shadow-md">
+            <CardHeader><CardTitle>Alamat</CardTitle><CardDescription>Alamat utama sekolah</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <div><Label>Alamat Baris 1</Label><Input value={localContactInfo?.address_line1 || ''} onChange={(e) => setLocalContactInfo(localContactInfo ? { ...localContactInfo, address_line1: e.target.value } : null)} placeholder="Masukkan alamat baris 1" className="mt-2" /></div>
+              <div><Label>Alamat Baris 2 (Opsional)</Label><Input value={localContactInfo?.address_line2 || ''} onChange={(e) => setLocalContactInfo(localContactInfo ? { ...localContactInfo, address_line2: e.target.value } : null)} placeholder="Masukkan alamat baris 2" className="mt-2" /></div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Telepon</CardTitle>
-            <CardDescription>Nomor telepon sekolah</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Input
-              id="phone"
-              value={localContactInfo?.phone || ''}
-              onChange={(e) =>
-                setLocalContactInfo(localContactInfo ? { ...localContactInfo, phone: e.target.value } : null)
-              }
-              placeholder="Masukkan nomor telepon"
-            />
-          </CardContent>
-        </Card>
+        <motion.div variants={staggerItem}>
+          <Card className="border-0 shadow-md">
+            <CardHeader><CardTitle>Telepon</CardTitle><CardDescription>Nomor telepon sekolah</CardDescription></CardHeader>
+            <CardContent><Input value={localContactInfo?.phone || ''} onChange={(e) => setLocalContactInfo(localContactInfo ? { ...localContactInfo, phone: e.target.value } : null)} placeholder="Masukkan nomor telepon" /></CardContent>
+          </Card>
+        </motion.div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Email</CardTitle>
-            <CardDescription>Email kontak sekolah</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="email1">Email Utama</Label>
-                <Input
-                  id="email1"
-                  type="email"
-                  value={localContactInfo?.email1 || ''}
-                  onChange={(e) =>
-                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, email1: e.target.value } : null)
-                  }
-                  placeholder="Masukkan email utama"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email2">Email Sekunder (Opsional)</Label>
-                <Input
-                  id="email2"
-                  type="email"
-                  value={localContactInfo?.email2 || ''}
-                  onChange={(e) =>
-                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, email2: e.target.value } : null)
-                  }
-                  placeholder="Masukkan email sekunder (opsional)"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div variants={staggerItem}>
+          <Card className="border-0 shadow-md">
+            <CardHeader><CardTitle>Email</CardTitle><CardDescription>Email kontak sekolah</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <div><Label>Email Utama</Label><Input type="email" value={localContactInfo?.email1 || ''} onChange={(e) => setLocalContactInfo(localContactInfo ? { ...localContactInfo, email1: e.target.value } : null)} placeholder="Masukkan email utama" className="mt-2" /></div>
+              <div><Label>Email Sekunder (Opsional)</Label><Input type="email" value={localContactInfo?.email2 || ''} onChange={(e) => setLocalContactInfo(localContactInfo ? { ...localContactInfo, email2: e.target.value } : null)} placeholder="Masukkan email sekunder" className="mt-2" /></div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Jam Operasional</CardTitle>
-            <CardDescription>Informasi jam operasional sekolah</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="operating_hours">Jam Operasional</Label>
-                <Textarea
-                  id="operating_hours"
-                  value={localContactInfo?.operating_hours || ''}
-                  onChange={(e) =>
-                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, operating_hours: e.target.value } : null)
-                  }
-                  placeholder="Masukkan jam operasional"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label htmlFor="operating_hours_subtext">Keterangan Tambahan (Opsional)</Label>
-                <Textarea
-                  id="operating_hours_subtext"
-                  value={localContactInfo?.operating_hours_subtext || ''}
-                  onChange={(e) =>
-                    setLocalContactInfo(localContactInfo ? { ...localContactInfo, operating_hours_subtext: e.target.value } : null)
-                  }
-                  placeholder="Masukkan keterangan tambahan (opsional)"
-                  rows={3}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div variants={staggerItem}>
+          <Card className="border-0 shadow-md">
+            <CardHeader><CardTitle>Jam Operasional</CardTitle><CardDescription>Informasi jam operasional sekolah</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <div><Label>Jam Operasional</Label><Textarea value={localContactInfo?.operating_hours || ''} onChange={(e) => setLocalContactInfo(localContactInfo ? { ...localContactInfo, operating_hours: e.target.value } : null)} placeholder="Contoh: Senin - Jumat: 07:00 - 15:00" rows={3} className="mt-2" /></div>
+              <div><Label>Keterangan Tambahan (Opsional)</Label><Input value={localContactInfo?.operating_hours_subtext || ''} onChange={(e) => setLocalContactInfo(localContactInfo ? { ...localContactInfo, operating_hours_subtext: e.target.value } : null)} placeholder="Keterangan tambahan" className="mt-2" /></div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <div className="flex justify-end">
-          <Button 
-            onClick={() => localContactInfo && saveMutation.mutate(localContactInfo)} 
-            disabled={saveMutation.isPending}
-          >
-            {saveMutation.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Menyimpan...
-              </>
-            ) : (
-              'Simpan Perubahan'
-            )}
+        <motion.div variants={staggerItem} className="flex justify-end">
+          <Button onClick={() => localContactInfo && saveMutation.mutate(localContactInfo)} disabled={saveMutation.isPending} className="bg-slate-950 hover:bg-slate-800">
+            {saveMutation.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

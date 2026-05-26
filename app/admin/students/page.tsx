@@ -1,21 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  FileDown,
-  Loader2,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  Search,
-  Trash2,
-  UserRoundCheck,
-  Users,
-} from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, FileDown, Loader2, MoreHorizontal, Pencil, Plus, Search, Trash2, UserRoundCheck, Users } from "lucide-react";
+import { PageLoading } from "@/components/ui/loading";
+import { staggerContainer, staggerItem, fadeInDown } from "@/components/ui/animated";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -475,19 +465,26 @@ export default function StudentsPage() {
     (registration) => registration.id === importForm.registrationId
   );
 
+  const isInitialLoading = studentsQuery.isLoading && overviewQuery.isLoading;
+
+  if (isInitialLoading) {
+    return <div className="min-h-screen bg-[#f8fbff] p-6"><PageLoading text="Memuat data siswa..." /></div>;
+  }
+
   return (
-    <div className="min-h-screen space-y-6 bg-[#f8fbff] p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p className="text-sm font-medium text-cyan-700">Akademik</p>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-            Manajemen Siswa
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Kelola siswa aktif, data orang tua, kelas, dan import siswa dari PPDB.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+    <div className="min-h-screen bg-[#f8fbff] p-4 sm:p-6 lg:p-8">
+      <motion.div className="space-y-6" initial="hidden" animate="show" variants={staggerContainer}>
+        <motion.div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between" variants={fadeInDown}>
+          <div>
+            <p className="text-sm font-medium text-cyan-700">Akademik</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-950">
+              Manajemen Siswa
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              Kelola siswa aktif, data orang tua, kelas, dan import siswa dari PPDB.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
             <FileDown className="mr-2 h-4 w-4" />
             Import dari PPDB
@@ -496,17 +493,18 @@ export default function StudentsPage() {
             <Plus className="mr-2 h-4 w-4" />
             Tambah Siswa
           </Button>
-        </div>
-      </div>
+          </div>
+        </motion.div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <motion.div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" variants={staggerItem}>
         <MetricCard title="Total Siswa" value={overview.total} icon={Users} tone="cyan" />
         <MetricCard title="Siswa Aktif" value={overview.active} icon={UserRoundCheck} tone="emerald" />
         <MetricCard title="Laki-laki" value={overview.male} icon={Users} tone="blue" />
         <MetricCard title="Perempuan" value={overview.female} icon={Users} tone="rose" />
-      </div>
+        </motion.div>
 
-      <Card className="border-0 bg-white shadow-sm">
+        <motion.div variants={staggerItem}>
+        <Card className="border-0 bg-white shadow-sm">
         <CardHeader>
           <CardTitle>Daftar Siswa</CardTitle>
           <CardDescription>
@@ -692,6 +690,7 @@ export default function StudentsPage() {
           </div>
         </CardContent>
       </Card>
+      </motion.div>
 
       <Dialog open={isStudentDialogOpen} onOpenChange={setIsStudentDialogOpen}>
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
@@ -959,6 +958,7 @@ export default function StudentsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </motion.div>
     </div>
   );
 }

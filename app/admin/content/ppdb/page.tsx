@@ -1,31 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { motion } from "framer-motion";
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  BarChart3,
-  CheckCircle2,
-  ClipboardList,
-  ExternalLink,
-  FilePlus2,
-  Loader2,
-  Search,
-  ShieldCheck,
-  Trash2,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { AlertCircle, BarChart3, CheckCircle2, ClipboardList, ExternalLink, FilePlus2, Loader2, Search, ShieldCheck, Trash2, UserPlus, Users } from "lucide-react";
+import { PageLoading } from "@/components/ui/loading";
+import { staggerContainer, staggerItem, fadeInDown } from "@/components/ui/animated";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -433,28 +414,25 @@ export default function PPDBSettingsCMS() {
   };
 
   if (isSettingsLoading || isRegistrationsLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <div className="min-h-screen bg-[#f8fbff] p-6"><PageLoading text="Memuat data PPDB..." /></div>;
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="max-w-3xl space-y-2">
-          <Badge variant="outline" className="w-fit">
-            PPDB Tahun Ajaran 2026
-          </Badge>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Formulir Penerimaan Peserta Didik Baru
-          </h1>
-          <p className="text-sm text-muted-foreground sm:text-base">
-            Pantau pendaftar, status verifikasi, dan kanal formulir PPDB dalam satu halaman admin.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+    <div className="min-h-screen bg-[#f8fbff] p-4 sm:p-6 lg:p-8">
+      <motion.div className="space-y-6" initial="hidden" animate="show" variants={staggerContainer}>
+        <motion.div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between" variants={fadeInDown}>
+          <div className="max-w-3xl space-y-2">
+            <Badge variant="outline" className="w-fit">
+              PPDB Tahun Ajaran 2026
+            </Badge>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Formulir Penerimaan Peserta Didik Baru
+            </h1>
+            <p className="text-sm text-muted-foreground sm:text-base">
+              Pantau pendaftar, status verifikasi, dan kanal formulir PPDB dalam satu halaman admin.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
           {settingsForm.google_form_url && (
             <Button variant="outline" asChild>
               <a href={settingsForm.google_form_url} target="_blank" rel="noreferrer">
@@ -697,23 +675,10 @@ export default function PPDBSettingsCMS() {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
+          </div>
+        </motion.div>
 
-      {(isSettingsError || isRegistrationsError) && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Data belum bisa dimuat</AlertTitle>
-          <AlertDescription>
-            {getErrorMessage(settingsError || registrationsError)}
-            {isRegistrationsError
-              ? " Jika tabel PPDB belum dibuat, jalankan migration ppdb_registrations terlebih dahulu."
-              : ""}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <motion.div variants={staggerItem} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={Users}
           title="Total Pendaftar"
@@ -738,13 +703,13 @@ export default function PPDBSettingsCMS() {
           value={statusSummary.baru}
           description="Perlu follow-up admin"
         />
-      </div>
+        </motion.div>
 
-      <Tabs defaultValue="pendaftar" className="space-y-4">
-        <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:grid-cols-3 lg:w-fit">
+        <motion.div variants={staggerItem}>
+        <Tabs defaultValue="pendaftar" className="space-y-4">
+        <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:grid-cols-2 lg:w-fit">
           <TabsTrigger value="pendaftar">Data Siswa</TabsTrigger>
           <TabsTrigger value="analitik">Analitik</TabsTrigger>
-          <TabsTrigger value="pengaturan">Pengaturan Form</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pendaftar" className="space-y-4">
@@ -879,7 +844,12 @@ export default function PPDBSettingsCMS() {
         </TabsContent>
 
         <TabsContent value="analitik" className="space-y-4">
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
+          <motion.div 
+            className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -957,53 +927,10 @@ export default function PPDBSettingsCMS() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="pengaturan">
-          <Card className="max-w-4xl">
-            <CardHeader>
-              <CardTitle>Pengaturan Kanal Formulir</CardTitle>
-              <CardDescription>
-                Simpan tautan Google Form atau formulir eksternal PPDB yang dipakai orang tua siswa.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="google_form_url">URL Google Form PPDB 2026</Label>
-                <Input
-                  id="google_form_url"
-                  value={settingsForm.google_form_url}
-                  onChange={(event) =>
-                    setSettingsForm({ google_form_url: event.target.value })
-                  }
-                  placeholder="https://forms.gle/..."
-                />
-              </div>
-
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Catatan integrasi</AlertTitle>
-                <AlertDescription>
-                  List data siswa membaca tabel Supabase `ppdb_registrations`. Jika Google Form dipakai sebagai sumber utama, hubungkan response form ke tabel ini melalui automation atau import data.
-                </AlertDescription>
-              </Alert>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={() => saveSettingsMutation.mutate()}
-                  disabled={saveSettingsMutation.isPending}
-                >
-                  {saveSettingsMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Simpan Pengaturan
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          </motion.div>
         </TabsContent>
       </Tabs>
+      </motion.div>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
@@ -1027,6 +954,7 @@ export default function PPDBSettingsCMS() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </motion.div>
     </div>
   );
 }

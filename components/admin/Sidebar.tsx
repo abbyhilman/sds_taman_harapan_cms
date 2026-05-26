@@ -8,6 +8,7 @@ import {
   FileText,
   Image as ImageIcon,
   GraduationCap,
+  TrendingUp,
   ChevronDown,
   LogOut,
   Menu,
@@ -55,6 +56,11 @@ const menuItems: MenuItem[] = [
       { title: 'Raport Digital', href: '/admin/report-cards' },
       { title: 'Master Data', href: '/admin/master-data' },
     ],
+  },
+  {
+    title: 'Keuangan',
+    icon: TrendingUp,
+    href: '/admin/financial',
   },
   {
     title: 'Galeri Media',
