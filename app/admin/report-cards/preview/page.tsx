@@ -3,7 +3,8 @@
 import { useRef, useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, Sparkles, Loader2, Save, Undo2, TrendingUp, TrendingDown, BookOpen, AlertCircle, Edit, FileText, Check, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Download, Sparkles, Loader2, Save, Undo2, TrendingUp, TrendingDown, BookOpen, AlertCircle, Edit, FileText, Check, AlertTriangle, Target, Lightbulb, Star, ChevronDown, ChevronUp } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -32,6 +33,93 @@ interface GradeData {
   predicate: string | null;
   description: string | null;
   subjects: { name: string; code: string; category: string } | null;
+}
+
+interface FocusArea {
+  subject: string;
+  current_score: number;
+  target_score: number;
+  priority: string;
+  strategies: string[];
+  daily_tip: string;
+}
+
+const priorityConfig: Record<string, { label: string; className: string }> = {
+  tinggi:  { label: 'Prioritas Tinggi',  className: 'border-red-200 bg-red-50 text-red-700' },
+  sedang:  { label: 'Prioritas Sedang',  className: 'border-amber-200 bg-amber-50 text-amber-700' },
+  rendah:  { label: 'Prioritas Rendah',  className: 'border-blue-200 bg-blue-50 text-blue-700' },
+};
+
+function AIFocusPanel({ focusAreas, strengthNote }: { focusAreas: FocusArea[]; strengthNote: string }) {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(0);
+  if (focusAreas.length === 0 && !strengthNote) return null;
+  return (
+    <div className="space-y-3">
+      {strengthNote && (
+        <div className="rounded-lg border bg-blue-50 p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Star className="h-3.5 w-3.5 text-blue-600" />
+            <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">Kekuatan Siswa</span>
+          </div>
+          <p className="text-xs text-slate-700 leading-relaxed">{strengthNote}</p>
+        </div>
+      )}
+      {focusAreas.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5">
+            <Target className="h-3.5 w-3.5 text-slate-500" />
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Fokus Belajar</span>
+          </div>
+          {focusAreas.map((area, idx) => {
+            const pCfg = priorityConfig[area.priority] ?? priorityConfig.sedang;
+            const isOpen = expandedIdx === idx;
+            return (
+              <div key={idx} className="rounded-lg border bg-white overflow-hidden shadow-sm">
+                <button
+                  className="w-full flex items-center justify-between p-3 text-left hover:bg-slate-50 transition-colors"
+                  onClick={() => setExpandedIdx(isOpen ? null : idx)}
+                >
+                  <div>
+                    <p className="text-xs font-semibold text-slate-900">{area.subject}</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Nilai: <span className="text-amber-600 font-medium">{area.current_score}</span>
+                      {' → '}Target: <span className="text-emerald-600 font-medium">{area.target_score}</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                    <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0", pCfg.className)}>{pCfg.label}</Badge>
+                    {isOpen ? <ChevronUp className="h-3 w-3 text-slate-400" /> : <ChevronDown className="h-3 w-3 text-slate-400" />}
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                      <div className="px-3 pb-3 space-y-2 border-t bg-slate-50">
+                        <ul className="space-y-1 pt-2">
+                          {area.strategies.map((s, si) => (
+                            <li key={si} className="flex items-start gap-1.5 text-[11px] text-slate-700">
+                              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[9px] font-bold text-violet-700">{si + 1}</span>
+                              {s}
+                            </li>
+                          ))}
+                        </ul>
+                        {area.daily_tip && (
+                          <div className="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 p-2">
+                            <Lightbulb className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />
+                            <p className="text-[10px] text-amber-800 leading-relaxed">{area.daily_tip}</p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ReportCardPreviewPage() {
@@ -113,47 +201,44 @@ export default function ReportCardPreviewPage() {
     enabled: !!reportCardId,
   });
 
-  // Derive appreciation and recommendation from homeroom_notes JSON
-  const { appreciation, recommendation } = useMemo(() => {
+  // Derive appreciation, recommendation, focus_areas, strength_note from homeroom_notes JSON
+  const { appreciation, recommendation, focusAreas, strengthNote } = useMemo(() => {
     let appreciationText = "";
     let recommendationText = "";
+    let focusAreasData: FocusArea[] = [];
+    let strengthNoteText = "";
     const notesRaw = report?.homeroom_notes || "";
     if (notesRaw.trim().startsWith("{")) {
       try {
         const parsed = JSON.parse(notesRaw);
         appreciationText = parsed.appreciation || "";
         recommendationText = parsed.recommendation || "";
-      } catch (e) {
+        focusAreasData = parsed.focus_areas || [];
+        strengthNoteText = parsed.strength_note || "";
+      } catch {
         appreciationText = notesRaw;
       }
     } else {
       appreciationText = notesRaw;
     }
-    return {
-      appreciation: appreciationText,
-      recommendation: recommendationText
-    };
+    return { appreciation: appreciationText, recommendation: recommendationText, focusAreas: focusAreasData, strengthNote: strengthNoteText };
   }, [report?.homeroom_notes]);
 
   // Sync notes state with DB data when loaded
   useEffect(() => {
     if (report) {
-      let appreciationText = "";
-      let recommendationText = "";
       const notesRaw = report.homeroom_notes || "";
       if (notesRaw.trim().startsWith("{")) {
         try {
           const parsed = JSON.parse(notesRaw);
-          appreciationText = parsed.appreciation || "";
-          recommendationText = parsed.recommendation || "";
-        } catch (e) {
-          appreciationText = notesRaw;
+          setAiAppreciation(parsed.appreciation || "");
+          setAiRecommendation(parsed.recommendation || "");
+        } catch {
+          setAiAppreciation(notesRaw);
         }
       } else {
-        appreciationText = notesRaw;
+        setAiAppreciation(notesRaw);
       }
-      setAiAppreciation(appreciationText);
-      setAiRecommendation(recommendationText);
     }
   }, [report]);
 
@@ -242,35 +327,29 @@ export default function ReportCardPreviewPage() {
   // Triggers/re-triggers backend AI generation
   const handleRegenerateAI = async () => {
     if (stats && stats.completionRate < 50) {
-      toast({
-        title: "Gagal Menjalankan AI",
-        description: `Minimal 50% nilai harus diinput. Saat ini baru ${stats.completionRate}% lengkap.`,
-        variant: "destructive"
-      });
+      toast({ title: "Gagal Menjalankan AI", description: `Minimal 50% nilai harus diinput. Saat ini baru ${stats.completionRate}% lengkap.`, variant: "destructive" });
       return;
     }
-
     setAiLoading(true);
     try {
-      const res = await fetch(`/api/report-cards/${reportCardId}/analyze`, {
-        method: "POST",
-      });
+      const res = await fetch(`/api/report-cards/${reportCardId}/analyze`, { method: "POST" });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal melakukan analisa AI");
-      }
+      if (!res.ok) throw new Error(data.error || "Gagal melakukan analisa AI");
       setAiAppreciation(data.ai_report.appreciation || "");
       setAiRecommendation(data.ai_report.recommendation || "");
-      toast({
-        title: "Analisa AI Selesai",
-        description: "Catatan apresiasi & rekomendasi baru berhasil dibuat di form sidebar. Silakan tinjau dan simpan.",
-      });
+      // Save full AI report (including focus_areas) to DB immediately
+      await supabase.from("report_cards").update({
+        homeroom_notes: JSON.stringify({
+          appreciation: data.ai_report.appreciation || "",
+          recommendation: data.ai_report.recommendation || "",
+          focus_areas: data.ai_report.focus_areas || [],
+          strength_note: data.ai_report.strength_note || "",
+        }),
+      }).eq("id", reportCardId);
+      await queryClient.invalidateQueries({ queryKey: ["report-preview", reportCardId] });
+      toast({ title: "Analisa AI Selesai", description: "Catatan dan fokus belajar berhasil diperbarui." });
     } catch (error: any) {
-      toast({
-        title: "Analisa AI Gagal",
-        description: error.message || "Terjadi kesalahan koneksi",
-        variant: "destructive",
-      });
+      toast({ title: "Analisa AI Gagal", description: error.message || "Terjadi kesalahan koneksi", variant: "destructive" });
     } finally {
       setAiLoading(false);
     }
@@ -283,6 +362,8 @@ export default function ReportCardPreviewPage() {
       const combinedNotes = JSON.stringify({
         appreciation: aiAppreciation,
         recommendation: aiRecommendation,
+        focus_areas: focusAreas,
+        strength_note: strengthNote,
       });
 
       const { error } = await supabase
@@ -503,6 +584,27 @@ export default function ReportCardPreviewPage() {
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* AI-generated notes (read-only display) */}
+                {(appreciation || recommendation) && (
+                  <div className="rounded-lg border border-violet-100 bg-violet-50 p-3 space-y-2.5">
+                    <p className="text-[10px] font-bold text-violet-600 uppercase tracking-wider flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" /> Catatan dari AI
+                    </p>
+                    {appreciation && (
+                      <div>
+                        <p className="text-[10px] font-semibold text-slate-500 mb-0.5">Apresiasi</p>
+                        <p className="text-xs text-slate-700 leading-relaxed">{appreciation}</p>
+                      </div>
+                    )}
+                    {recommendation && (
+                      <div className="pt-2 border-t border-violet-100">
+                        <p className="text-[10px] font-semibold text-slate-500 mb-0.5">Rekomendasi</p>
+                        <p className="text-xs text-slate-700 leading-relaxed">{recommendation}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     Apresiasi Wali Kelas
@@ -557,6 +659,21 @@ export default function ReportCardPreviewPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* AI Focus Areas Panel */}
+            {(focusAreas.length > 0 || strengthNote) && (
+              <Card className="border-0 shadow-md bg-white">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-violet-600" />
+                    Analisa AI — Fokus Belajar
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AIFocusPanel focusAreas={focusAreas} strengthNote={strengthNote} />
+                </CardContent>
+              </Card>
+            )}
 
           </div>
         </div>

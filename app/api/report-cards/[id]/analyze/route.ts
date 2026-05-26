@@ -12,134 +12,121 @@ export async function POST(
 ) {
   try {
     const { id: reportCardId } = await params;
-    console.log('Analyzing report card:', reportCardId);
 
     // Fetch report card with student info
     const { data: reportCard, error: rcError } = await supabase
       .from('report_cards')
-      .select(`
-        id,
-        semester,
-        class_name,
-        status,
-        students (
-          id,
-          full_name,
-          current_class
-        )
-      `)
+      .select('id, semester, class_name, status, students(id, full_name, current_class)')
       .eq('id', reportCardId)
       .maybeSingle();
 
-    console.log('Report card query result:', { reportCard, rcError });
+    if (rcError) return NextResponse.json({ error: 'Gagal mengambil data rapor', details: rcError.message }, { status: 500 });
+    if (!reportCard) return NextResponse.json({ error: 'Rapor tidak ditemukan' }, { status: 404 });
 
-    if (rcError) {
-      console.error('Report card error:', rcError);
-      return NextResponse.json({ error: 'Gagal mengambil data rapor', details: rcError.message }, { status: 500 });
-    }
-
-    if (!reportCard) {
-      return NextResponse.json({ error: 'Rapor tidak ditemukan' }, { status: 404 });
-    }
-
-    // Fetch grades for this report card
+    // Fetch grades
     const { data: grades, error: gradesError } = await supabase
       .from('report_card_grades')
-      .select(`
-        id,
-        knowledge_score,
-        skill_score,
-        predicate,
-        subjects (
-          id,
-          name,
-          code
-        )
-      `)
+      .select('id, knowledge_score, skill_score, predicate, subjects(id, name, code)')
       .eq('report_card_id', reportCardId);
 
-    console.log('Grades query result:', { gradesCount: grades?.length, gradesError });
+    if (gradesError) return NextResponse.json({ error: 'Gagal mengambil data nilai' }, { status: 500 });
+    if (!grades || grades.length === 0) return NextResponse.json({ error: 'Belum ada nilai yang diinput' }, { status: 400 });
 
-    if (gradesError) {
-      return NextResponse.json({ error: 'Gagal mengambil data nilai' }, { status: 500 });
-    }
-
-    if (!grades || grades.length === 0) {
-      return NextResponse.json({ error: 'Belum ada nilai yang diinput' }, { status: 400 });
-    }
-
-    // Calculate statistics
     const completedGrades = grades.filter(g => g.knowledge_score !== null && g.skill_score !== null);
     const completionRate = (completedGrades.length / grades.length) * 100;
 
     if (completionRate < 50) {
-      return NextResponse.json({ 
-        error: `Minimal 50% nilai harus diinput. Saat ini: ${completionRate.toFixed(0)}%` 
+      return NextResponse.json({
+        error: `Minimal 50% nilai harus diinput. Saat ini: ${completionRate.toFixed(0)}%`
       }, { status: 400 });
     }
 
-    // Calculate averages and identify top/weak subjects
+    // Build subject scores
     const subjectScores = completedGrades.map(g => {
       const subj = Array.isArray(g.subjects) ? g.subjects[0] : g.subjects;
+      const knowledge = Number(g.knowledge_score);
+      const skill = Number(g.skill_score);
+      const average = (knowledge + skill) / 2;
       return {
         name: subj?.name || 'Unknown',
         code: subj?.code || '',
-        knowledge: Number(g.knowledge_score),
-        skill: Number(g.skill_score),
-        average: (Number(g.knowledge_score) + Number(g.skill_score)) / 2,
-        predicate: g.predicate
+        knowledge,
+        skill,
+        average,
+        predicate: g.predicate,
       };
     });
 
-    const avgKnowledge = subjectScores.reduce((sum, s) => sum + s.knowledge, 0) / subjectScores.length;
-    const avgSkill = subjectScores.reduce((sum, s) => sum + s.skill, 0) / subjectScores.length;
+    const avgKnowledge = subjectScores.reduce((s, x) => s + x.knowledge, 0) / subjectScores.length;
+    const avgSkill = subjectScores.reduce((s, x) => s + x.skill, 0) / subjectScores.length;
     const overallAvg = (avgKnowledge + avgSkill) / 2;
 
-    // Sort to find top and weak subjects
     const sorted = [...subjectScores].sort((a, b) => b.average - a.average);
     const topSubjects = sorted.slice(0, 3);
-    const weakSubjects = sorted.slice(-3).reverse();
+    const weakSubjects = sorted.filter(s => s.average < 80).sort((a, b) => a.average - b.average);
 
-    // Build AI prompt
     const student = Array.isArray(reportCard.students) ? reportCard.students[0] : reportCard.students;
     const studentName = student?.full_name || 'Siswa';
     const className = student?.current_class || reportCard.class_name;
 
-    const prompt = `Kamu adalah wali kelas SD yang berpengalaman dan bijaksana. Analisa nilai rapor siswa berikut dan berikan catatan yang membangun.
+    // ── AI Prompt ──────────────────────────────────────────────────────────────
+    const weakList = weakSubjects.length > 0
+      ? weakSubjects.map(s => `- ${s.name}: Pengetahuan ${s.knowledge}, Keterampilan ${s.skill} (rata-rata ${s.average.toFixed(1)})`).join('\n')
+      : '(tidak ada mata pelajaran di bawah 80)';
+
+    const prompt = `Kamu adalah wali kelas SD yang berpengalaman dan bijaksana. Analisa nilai rapor siswa berikut dan berikan catatan yang membangun serta panduan belajar yang konkret.
 
 Nama Siswa: ${studentName}
 Kelas: ${className}
 Semester: ${reportCard.semester}
 
-Nilai Mata Pelajaran:
-${subjectScores.map(s => `- ${s.name}: Pengetahuan ${s.knowledge}, Keterampilan ${s.skill} (Predikat ${s.predicate})`).join('\n')}
+Semua Nilai Mata Pelajaran:
+${subjectScores.map(s => `- ${s.name}: Pengetahuan ${s.knowledge}, Keterampilan ${s.skill} (rata-rata ${s.average.toFixed(1)}, Predikat ${s.predicate})`).join('\n')}
 
 Rata-rata Pengetahuan: ${avgKnowledge.toFixed(1)}
 Rata-rata Keterampilan: ${avgSkill.toFixed(1)}
 Rata-rata Keseluruhan: ${overallAvg.toFixed(1)}
 
-Mata Pelajaran Terbaik: ${topSubjects.map(s => `${s.name} (${s.average.toFixed(0)})`).join(', ')}
-Mata Pelajaran Perlu Perhatian: ${weakSubjects.filter(s => s.average < 80).map(s => `${s.name} (${s.average.toFixed(0)})`).join(', ') || 'Tidak ada'}
+Mata Pelajaran Terbaik (3 tertinggi): ${topSubjects.map(s => `${s.name} (${s.average.toFixed(0)})`).join(', ')}
+Mata Pelajaran Perlu Perhatian (< 80): 
+${weakList}
 
-Berikan response dalam format JSON:
+Berikan response dalam format JSON berikut (HANYA JSON, tanpa teks lain):
 {
-  "appreciation": "Paragraf apresiasi 2-3 kalimat. Sebutkan nama siswa dan mata pelajaran terbaiknya. Gunakan bahasa yang positif dan memotivasi.",
-  "recommendation": "Paragraf rekomendasi 2-3 kalimat. Jika ada mata pelajaran di bawah 80, sebutkan dan berikan saran konkret untuk perbaikan. Jika semua nilai bagus, berikan saran untuk mempertahankan prestasi."
-}`;
+  "appreciation": "Paragraf apresiasi 2-3 kalimat. Sebutkan nama siswa dan mata pelajaran terbaiknya. Gunakan bahasa positif dan memotivasi.",
+  "recommendation": "Paragraf rekomendasi umum 2-3 kalimat. Jika ada mata pelajaran di bawah 80, sebutkan dan berikan saran umum. Jika semua nilai bagus, berikan saran mempertahankan prestasi.",
+  "focus_areas": [
+    {
+      "subject": "Nama Mata Pelajaran",
+      "current_score": 75,
+      "target_score": 85,
+      "priority": "tinggi",
+      "strategies": [
+        "Strategi belajar konkret 1 (spesifik untuk mapel ini)",
+        "Strategi belajar konkret 2",
+        "Strategi belajar konkret 3"
+      ],
+      "daily_tip": "Tips harian singkat yang bisa langsung dipraktikkan siswa SD"
+    }
+  ],
+  "strength_note": "Kalimat singkat tentang kekuatan siswa berdasarkan mata pelajaran terbaiknya, dan bagaimana kekuatan ini bisa membantu mapel yang lemah."
+}
 
-    // Call AI
+Catatan: "focus_areas" hanya diisi untuk mata pelajaran dengan rata-rata < 80. Jika tidak ada, isi dengan array kosong []. Strategi harus spesifik, praktis, dan sesuai level SD.`;
+
+    // ── Call AI ────────────────────────────────────────────────────────────────
     const aiResponse = await fetch('https://ai.sumopod.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.SUMOPOD_API_KEY}`
+        'Authorization': `Bearer ${process.env.SUMOPOD_API_KEY}`,
       },
       body: JSON.stringify({
         model: 'kimi-k2.6',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 600,
-        temperature: 0.7
-      })
+        max_tokens: 1200,
+        temperature: 0.7,
+      }),
     });
 
     if (!aiResponse.ok) {
@@ -152,7 +139,13 @@ Berikan response dalam format JSON:
     const aiContent = aiData.choices?.[0]?.message?.content || '';
 
     // Parse AI response
-    let aiReport = { appreciation: '', recommendation: '' };
+    let aiReport: {
+      appreciation: string;
+      recommendation: string;
+      focus_areas: { subject: string; current_score: number; target_score: number; priority: string; strategies: string[]; daily_tip: string }[];
+      strength_note: string;
+    } = { appreciation: '', recommendation: '', focus_areas: [], strength_note: '' };
+
     try {
       const match = aiContent.match(/\{[\s\S]*\}/);
       if (match) aiReport = JSON.parse(match[0]);
@@ -173,9 +166,9 @@ Berikan response dalam format JSON:
         average_skill: Math.round(avgSkill * 10) / 10,
         overall_average: Math.round(overallAvg * 10) / 10,
         top_subjects: topSubjects.map(s => ({ name: s.name, score: Math.round(s.average) })),
-        weak_subjects: weakSubjects.filter(s => s.average < 80).map(s => ({ name: s.name, score: Math.round(s.average) }))
+        weak_subjects: weakSubjects.map(s => ({ name: s.name, score: Math.round(s.average) })),
       },
-      ai_report: aiReport
+      ai_report: aiReport,
     });
 
   } catch (error) {
