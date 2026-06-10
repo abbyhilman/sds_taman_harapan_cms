@@ -44,6 +44,12 @@ interface FocusArea {
   daily_tip: string;
 }
 
+interface SemesterComparison {
+  previous_average: number | null;
+  trend: 'naik' | 'turun' | 'stabil';
+  note: string;
+}
+
 const priorityConfig: Record<string, { label: string; className: string }> = {
   tinggi:  { label: 'Prioritas Tinggi',  className: 'border-red-200 bg-red-50 text-red-700' },
   sedang:  { label: 'Prioritas Sedang',  className: 'border-amber-200 bg-amber-50 text-amber-700' },
@@ -202,11 +208,13 @@ export default function ReportCardPreviewPage() {
   });
 
   // Derive appreciation, recommendation, focus_areas, strength_note from homeroom_notes JSON
-  const { appreciation, recommendation, focusAreas, strengthNote } = useMemo(() => {
+  const { appreciation, recommendation, focusAreas, strengthNote, attendanceNote, semesterComparison } = useMemo(() => {
     let appreciationText = "";
     let recommendationText = "";
     let focusAreasData: FocusArea[] = [];
     let strengthNoteText = "";
+    let attendanceNoteText = "";
+    let semesterComparisonData: SemesterComparison | null = null;
     const notesRaw = report?.homeroom_notes || "";
     if (notesRaw.trim().startsWith("{")) {
       try {
@@ -215,13 +223,15 @@ export default function ReportCardPreviewPage() {
         recommendationText = parsed.recommendation || "";
         focusAreasData = parsed.focus_areas || [];
         strengthNoteText = parsed.strength_note || "";
+        attendanceNoteText = parsed.attendance_note || "";
+        semesterComparisonData = parsed.semester_comparison || null;
       } catch {
         appreciationText = notesRaw;
       }
     } else {
       appreciationText = notesRaw;
     }
-    return { appreciation: appreciationText, recommendation: recommendationText, focusAreas: focusAreasData, strengthNote: strengthNoteText };
+    return { appreciation: appreciationText, recommendation: recommendationText, focusAreas: focusAreasData, strengthNote: strengthNoteText, attendanceNote: attendanceNoteText, semesterComparison: semesterComparisonData };
   }, [report?.homeroom_notes]);
 
   // Sync notes state with DB data when loaded
@@ -344,6 +354,8 @@ export default function ReportCardPreviewPage() {
           recommendation: data.ai_report.recommendation || "",
           focus_areas: data.ai_report.focus_areas || [],
           strength_note: data.ai_report.strength_note || "",
+          attendance_note: data.ai_report.attendance_note || "",
+          semester_comparison: data.ai_report.semester_comparison || null,
         }),
       }).eq("id", reportCardId);
       await queryClient.invalidateQueries({ queryKey: ["report-preview", reportCardId] });
@@ -364,6 +376,8 @@ export default function ReportCardPreviewPage() {
         recommendation: aiRecommendation,
         focus_areas: focusAreas,
         strength_note: strengthNote,
+        attendance_note: attendanceNote,
+        semester_comparison: semesterComparison,
       });
 
       const { error } = await supabase
@@ -671,6 +685,57 @@ export default function ReportCardPreviewPage() {
                 </CardHeader>
                 <CardContent>
                   <AIFocusPanel focusAreas={focusAreas} strengthNote={strengthNote} />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Semester Comparison Card */}
+            {semesterComparison && (
+              <Card className="border-0 shadow-md bg-white">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                    <TrendingUp className="h-4 w-4 text-cyan-600" />
+                    Perbandingan Semester
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">Semester Lalu</span>
+                    <Badge variant="outline" className="font-bold text-slate-600 bg-slate-50 border-slate-200">
+                      {semesterComparison.previous_average?.toFixed(1) ?? '-'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">Trend</span>
+                    <Badge variant="outline" className={cn(
+                      "font-bold text-xs",
+                      semesterComparison.trend === 'naik' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      semesterComparison.trend === 'turun' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                      'bg-slate-50 text-slate-600 border-slate-200'
+                    )}>
+                      {semesterComparison.trend === 'naik' ? 'Naik' : semesterComparison.trend === 'turun' ? 'Turun' : 'Stabil'}
+                    </Badge>
+                  </div>
+                  {semesterComparison.note && (
+                    <p className="text-xs text-slate-600 leading-relaxed pt-2 border-t border-slate-100">
+                      {semesterComparison.note}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Attendance Note Card */}
+            {attendanceNote && (
+              <Card className="border-0 shadow-md bg-white">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                    <BookOpen className="h-4 w-4 text-amber-600" />
+                    Catatan Kehadiran
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-slate-600 leading-relaxed">{attendanceNote}</p>
                 </CardContent>
               </Card>
             )}

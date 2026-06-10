@@ -55,6 +55,7 @@ const menuItems: MenuItem[] = [
       { title: 'Daftar Siswa', href: '/admin/students' },
       { title: 'Raport Digital', href: '/admin/report-cards' },
       { title: 'Master Data', href: '/admin/master-data' },
+      { title: 'Template Raport', href: '/admin/raport-templates' },
     ],
   },
   {

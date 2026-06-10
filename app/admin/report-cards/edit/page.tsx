@@ -10,13 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { staggerContainer, staggerItem, fadeInDown, fadeInUp } from "@/components/ui/animated";
+import { KEPRIBADIAN_OPTIONS } from "@/lib/semester-utils";
 
 type Predicate = "A" | "B" | "C" | "D";
 
@@ -53,18 +56,29 @@ export default function EditReportCardPage() {
   const [grades, setGrades] = useState<Record<string, GradeDraft>>({});
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiMsg, setAiMsg] = useState("");
+  const [kepribadianSpiritual, setKepribadianSpiritual] = useState("Baik");
+  const [kepribadianSosial, setKepribadianSosial] = useState("Baik");
 
   const reportQuery = useQuery({
     queryKey: ["report-card", reportCardId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("report_cards")
-        .select("id, semester, class_name, status, students(full_name, nisn), academic_years(year_name)")
+        .select("id, semester, class_name, status, kepribadian_spiritual, kepribadian_sosial, students(full_name, nisn), academic_years(year_name)")
         .eq("id", reportCardId).single();
       if (error) throw error;
-      return data as unknown as ReportCardDetail;
+      return data as unknown as ReportCardDetail & { kepribadian_spiritual?: string; kepribadian_sosial?: string };
     },
   });
+
+  // Sync kepribadian from fetched data
+  useEffect(() => {
+    if (reportQuery.data) {
+      const rd = reportQuery.data as any;
+      if (rd.kepribadian_spiritual) setKepribadianSpiritual(rd.kepribadian_spiritual);
+      if (rd.kepribadian_sosial) setKepribadianSosial(rd.kepribadian_sosial);
+    }
+  }, [reportQuery.data]);
 
   const subjectsQuery = useQuery({
     queryKey: ["report-subjects"],
@@ -118,6 +132,13 @@ export default function EditReportCardPage() {
       });
       const { error } = await supabase.from("report_card_grades").upsert(payload, { onConflict: "report_card_id,subject_id" });
       if (error) throw error;
+
+      // Save kepribadian to report_cards
+      const { error: kepError } = await supabase.from("report_cards").update({
+        kepribadian_spiritual: kepribadianSpiritual,
+        kepribadian_sosial: kepribadianSosial,
+      }).eq("id", reportCardId);
+      if (kepError) console.error("Failed to save kepribadian:", kepError);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["report-card-grades", reportCardId] });
@@ -138,6 +159,8 @@ export default function EditReportCardPage() {
                 recommendation: data.ai_report.recommendation || "",
                 focus_areas: data.ai_report.focus_areas || [],
                 strength_note: data.ai_report.strength_note || "",
+                attendance_note: data.ai_report.attendance_note || "",
+                semester_comparison: data.ai_report.semester_comparison || null,
               }),
             }).eq("id", reportCardId);
             await queryClient.invalidateQueries({ queryKey: ["report-preview", reportCardId] });
@@ -214,6 +237,48 @@ export default function EditReportCardPage() {
               </Card>
             </motion.div>
           ))}
+        </motion.div>
+
+        {/* Kepribadian / Personality Assessment */}
+        <motion.div variants={fadeInUp}>
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-base">Penilaian Sikap (Kepribadian)</CardTitle>
+              <CardDescription>Penilaian sikap spiritual dan sosial siswa. Default: Baik.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-700">Sikap Spiritual</Label>
+                  <Select value={kepribadianSpiritual} onValueChange={setKepribadianSpiritual} disabled={isReadOnly}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {KEPRIBADIAN_OPTIONS.map((opt) => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-400">Meliputi: ketaatan beribadah, bersyukur, toleransi beragama.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-700">Sikap Sosial</Label>
+                  <Select value={kepribadianSosial} onValueChange={setKepribadianSosial} disabled={isReadOnly}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {KEPRIBADIAN_OPTIONS.map((opt) => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-400">Meliputi: jujur, disiplin, tanggung jawab, santun, percaya diri.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         <motion.div variants={fadeInUp}>
