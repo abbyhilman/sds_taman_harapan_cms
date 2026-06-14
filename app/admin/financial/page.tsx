@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -19,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   TrendingUp, TrendingDown, DollarSign, Calendar, RefreshCw, Loader2,
   Plus, Pencil, Trash2, Search, CheckCircle2, Clock, AlertCircle,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, AlertTriangle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
@@ -342,6 +343,8 @@ function SppManagementTab() {
   }), [invoices]);
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
+  const students = studentsQuery.data ?? [];
+  const noActiveStudents = !studentsQuery.isLoading && students.length === 0;
 
   return (
     <div className="space-y-6">
@@ -363,6 +366,20 @@ function SppManagementTab() {
         ))}
       </div>
 
+      {/* No Active Students Warning */}
+      {noActiveStudents && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-semibold text-sm text-amber-900">Belum Ada Siswa Aktif</h4>
+            <p className="text-xs text-amber-700 mt-1">
+              Tidak ada siswa aktif yang bisa dibuatkan invoice. Tambahkan atau aktifkan siswa terlebih dahulu di halaman{' '}
+              <Link href="/admin/students" className="underline font-semibold hover:text-amber-900">Data Siswa</Link>.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex gap-2 flex-wrap">
@@ -380,7 +397,7 @@ function SppManagementTab() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={openAdd} className="bg-slate-950 hover:bg-slate-800">
+        <Button onClick={openAdd} disabled={noActiveStudents} className="bg-slate-950 hover:bg-slate-800">
           <Plus className="w-4 h-4 mr-2" /> Tambah Invoice
         </Button>
       </div>
@@ -486,7 +503,7 @@ function SppManagementTab() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         initial={formInitial}
-        students={studentsQuery.data ?? []}
+        students={students}
         onSave={handleSave}
         isSaving={isSaving}
       />

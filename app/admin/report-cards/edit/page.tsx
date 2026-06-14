@@ -291,8 +291,19 @@ export default function EditReportCardPage() {
               {isLoading ? (
                 <div className="space-y-3">{[...Array(7)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
               ) : subjects.length === 0 ? (
-                <div className="rounded-2xl border border-dashed bg-slate-50 p-8 text-center text-sm text-slate-500">
-                  Belum ada master data mata pelajaran. Tambahkan melalui menu Master Data.
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-slate-50 p-10 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                    <AlertCircle className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800">Belum Ada Mata Pelajaran</h3>
+                    <p className="text-sm text-slate-500 mt-1 max-w-sm">
+                      Tambahkan mata pelajaran terlebih dahulu melalui Master Data agar bisa diisi nilainya.
+                    </p>
+                  </div>
+                  <Button asChild size="sm" variant="outline" className="border-amber-300 text-amber-800 hover:bg-amber-50">
+                    <Link href="/admin/master-data">Ke Master Data</Link>
+                  </Button>
                 </div>
               ) : (
                 <div className="overflow-x-auto">

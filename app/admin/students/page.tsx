@@ -648,11 +648,16 @@ export default function StudentsPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center">
-                      <p className="font-medium">Belum ada data siswa</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Tambah siswa baru atau import siswa yang sudah diterima dari PPDB.
-                      </p>
+                    <TableCell colSpan={8} className="h-48 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-slate-400" />
+                        </div>
+                        <p className="font-semibold text-slate-700">Belum ada data siswa</p>
+                        <p className="text-sm text-muted-foreground max-w-sm">
+                          Tambahkan siswa baru secara manual atau import data siswa yang sudah diterima dari pendaftaran PPDB.
+                        </p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
@@ -882,8 +887,12 @@ export default function StudentsPage() {
             </Field>
 
             {ppdbQuery.data?.length === 0 && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                Belum ada data PPDB berstatus diterima yang siap diimport.
+              <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Belum ada data PPDB yang siap diimport</p>
+                  <p className="text-xs text-amber-700 mt-0.5">Pastikan ada pendaftaran PPDB dengan status "Diterima" di menu PPDB terlebih dahulu.</p>
+                </div>
               </div>
             )}
 

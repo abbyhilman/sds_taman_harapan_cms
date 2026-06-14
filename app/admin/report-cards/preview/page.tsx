@@ -367,6 +367,23 @@ export default function ReportCardPreviewPage() {
     }
   };
 
+  // Auto-generate AI notes on first preview load if grades exist but no AI notes yet
+  const autoAiTriggered = useRef(false);
+  useEffect(() => {
+    if (
+      !autoAiTriggered.current &&
+      report &&
+      hasGrades &&
+      !report.homeroom_notes &&
+      stats &&
+      stats.completionRate >= 50 &&
+      !aiLoading
+    ) {
+      autoAiTriggered.current = true;
+      handleRegenerateAI();
+    }
+  }, [report, hasGrades, stats, aiLoading]);
+
   // Save the modified notes back to the Supabase database
   const handleSaveAI = async () => {
     setSavingAi(true);
@@ -496,8 +513,8 @@ export default function ReportCardPreviewPage() {
 
           {/* Right Column: AI Analysis & Quick Stats (1/3 width on desktop) */}
           <div className="space-y-6">
-            
-            {/* Quick Stats Card */}
+
+            {/* 1. Quick Stats Card */}
             {stats && (
               <Card className="border-0 shadow-md bg-white">
                 <CardHeader className="pb-3">
@@ -573,108 +590,7 @@ export default function ReportCardPreviewPage() {
               </Card>
             )}
 
-            {/* AI Notes Sidebar Preview Card */}
-            <Card className="border-0 shadow-md bg-white">
-              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                  <Sparkles className="h-4 w-4 text-violet-600 animate-pulse" />
-                  Catatan Wali Kelas
-                </CardTitle>
-                {report.status === "draft" && (
-                  <Button 
-                    onClick={handleRegenerateAI}
-                    disabled={aiLoading}
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-7 text-xs text-violet-600 hover:text-violet-700 hover:bg-violet-50 font-semibold flex items-center gap-1"
-                  >
-                    {aiLoading ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-3 w-3" />
-                    )}
-                    Regenerasi AI
-                  </Button>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* AI-generated notes (read-only display) */}
-                {(appreciation || recommendation) && (
-                  <div className="rounded-lg border border-violet-100 bg-violet-50 p-3 space-y-2.5">
-                    <p className="text-[10px] font-bold text-violet-600 uppercase tracking-wider flex items-center gap-1">
-                      <Sparkles className="h-3 w-3" /> Catatan dari AI
-                    </p>
-                    {appreciation && (
-                      <div>
-                        <p className="text-[10px] font-semibold text-slate-500 mb-0.5">Apresiasi</p>
-                        <p className="text-xs text-slate-700 leading-relaxed">{appreciation}</p>
-                      </div>
-                    )}
-                    {recommendation && (
-                      <div className="pt-2 border-t border-violet-100">
-                        <p className="text-[10px] font-semibold text-slate-500 mb-0.5">Rekomendasi</p>
-                        <p className="text-xs text-slate-700 leading-relaxed">{recommendation}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Apresiasi Wali Kelas
-                  </Label>
-                  <Textarea
-                    value={aiAppreciation}
-                    onChange={(e) => setAiAppreciation(e.target.value)}
-                    placeholder="Belum ada catatan apresiasi..."
-                    disabled={report.status !== "draft" || savingAi}
-                    className="h-28 text-xs leading-relaxed border-slate-200 focus:border-violet-500 focus:ring-violet-500 resize-none font-sans"
-                  />
-                  {report.status === "draft" && (
-                    <p className="text-[9px] text-slate-400">
-                      Tinjau hasil apresiasi dari AI di atas. Anda dapat mengeditnya secara manual.
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Rekomendasi Wali Kelas
-                  </Label>
-                  <Textarea
-                    value={aiRecommendation}
-                    onChange={(e) => setAiRecommendation(e.target.value)}
-                    placeholder="Belum ada catatan rekomendasi..."
-                    disabled={report.status !== "draft" || savingAi}
-                    className="h-28 text-xs leading-relaxed border-slate-200 focus:border-violet-500 focus:ring-violet-500 resize-none font-sans"
-                  />
-                  {report.status === "draft" && (
-                    <p className="text-[9px] text-slate-400">
-                      Tinjau saran perbaikan belajar dari AI di atas sebelum disimpan.
-                    </p>
-                  )}
-                </div>
-
-                {report.status === "draft" && (
-                  <div className="flex justify-end pt-2 border-t border-slate-100">
-                    <Button
-                      onClick={() => handleSaveAI()}
-                      disabled={savingAi || aiLoading}
-                      className="bg-violet-600 hover:bg-violet-700 text-white font-medium text-xs h-8 px-4"
-                    >
-                      {savingAi ? (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Save className="mr-1.5 h-3.5 w-3.5" />
-                      )}
-                      Simpan Catatan
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* AI Focus Areas Panel */}
+            {/* 2. AI Focus Areas Panel — actionable insights right after stats */}
             {(focusAreas.length > 0 || strengthNote) && (
               <Card className="border-0 shadow-md bg-white">
                 <CardHeader className="pb-3">
@@ -689,7 +605,7 @@ export default function ReportCardPreviewPage() {
               </Card>
             )}
 
-            {/* Semester Comparison Card */}
+            {/* 3. Semester Comparison Card */}
             {semesterComparison && (
               <Card className="border-0 shadow-md bg-white">
                 <CardHeader className="pb-3">
@@ -725,7 +641,7 @@ export default function ReportCardPreviewPage() {
               </Card>
             )}
 
-            {/* Attendance Note Card */}
+            {/* 4. Attendance Note Card */}
             {attendanceNote && (
               <Card className="border-0 shadow-md bg-white">
                 <CardHeader className="pb-3">
@@ -739,6 +655,88 @@ export default function ReportCardPreviewPage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* 5. Catatan Wali Kelas — textarea-first design, AI pre-fills content */}
+            <Card className="border-0 shadow-md bg-white">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                  <Edit className="h-4 w-4 text-slate-500" />
+                  Catatan Wali Kelas
+                </CardTitle>
+                {report.status === "draft" && (
+                  <Button
+                    onClick={handleRegenerateAI}
+                    disabled={aiLoading}
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-violet-600 hover:text-violet-700 hover:bg-violet-50 font-semibold flex items-center gap-1"
+                  >
+                    {aiLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                    {aiAppreciation || aiRecommendation ? "Regenerasi AI" : "Generate AI"}
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {aiLoading && (
+                  <div className="flex items-center gap-2 rounded-lg border border-violet-100 bg-violet-50 p-3">
+                    <Loader2 className="h-4 w-4 text-violet-600 animate-spin shrink-0" />
+                    <p className="text-xs text-violet-700">AI sedang menganalisa nilai siswa...</p>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    Apresiasi
+                  </Label>
+                  <Textarea
+                    value={aiAppreciation}
+                    onChange={(e) => setAiAppreciation(e.target.value)}
+                    placeholder="Klik 'Generate AI' untuk membuat catatan apresiasi otomatis berdasarkan nilai siswa..."
+                    disabled={report.status !== "draft" || savingAi || aiLoading}
+                    className="h-28 text-xs leading-relaxed border-slate-200 focus:border-violet-500 focus:ring-violet-500 resize-none font-sans"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    Rekomendasi
+                  </Label>
+                  <Textarea
+                    value={aiRecommendation}
+                    onChange={(e) => setAiRecommendation(e.target.value)}
+                    placeholder="Klik 'Generate AI' untuk membuat rekomendasi otomatis..."
+                    disabled={report.status !== "draft" || savingAi || aiLoading}
+                    className="h-28 text-xs leading-relaxed border-slate-200 focus:border-violet-500 focus:ring-violet-500 resize-none font-sans"
+                  />
+                </div>
+
+                {report.status === "draft" && (
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <p className="text-[9px] text-slate-400">
+                      {aiAppreciation || aiRecommendation
+                        ? "Hasil AI bisa diedit sebelum disimpan."
+                        : "AI akan generate otomatis saat nilai minimal 50% terisi."}
+                    </p>
+                    <Button
+                      onClick={() => handleSaveAI()}
+                      disabled={savingAi || aiLoading}
+                      className="bg-violet-600 hover:bg-violet-700 text-white font-medium text-xs h-8 px-4"
+                    >
+                      {savingAi ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Save className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      Simpan
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
           </div>
         </div>

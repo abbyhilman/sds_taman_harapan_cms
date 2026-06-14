@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpenCheck, FileText, Loader2, Plus, Search } from "lucide-react";
+import { BookOpenCheck, FileText, Loader2, Plus, Search, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,6 +74,24 @@ export default function ReportCardsPage() {
     },
   });
 
+  const templatesQuery = useQuery({
+    queryKey: ["prereq-templates"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("raport_templates").select("id, status").eq("status", "active").limit(1);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const subjectsQuery = useQuery({
+    queryKey: ["prereq-subjects"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("subjects").select("id").limit(1);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const selectedStudent = studentsQuery.data?.find((s) => s.id === studentId);
   const filteredStudents = useMemo(() => {
     const keyword = studentSearch.toLowerCase().trim();
@@ -99,6 +117,13 @@ export default function ReportCardsPage() {
   });
 
   const activeYearId = academicYearsQuery.data?.find((y) => y.is_active)?.id;
+  const hasActiveTemplate = (templatesQuery.data?.length ?? 0) > 0;
+  const hasActiveYear = !!activeYearId;
+  const hasSubjects = (subjectsQuery.data?.length ?? 0) > 0;
+  const missingPrereqs: { label: string; href: string; action: string }[] = [];
+  if (!hasActiveTemplate) missingPrereqs.push({ label: "Template Raport aktif", href: "/admin/raport-templates", action: "Upload & aktifkan template" });
+  if (!hasActiveYear) missingPrereqs.push({ label: "Tahun Ajaran aktif", href: "/admin/master-data", action: "Tambah tahun ajaran" });
+  if (!hasSubjects) missingPrereqs.push({ label: "Mata Pelajaran", href: "/admin/master-data", action: "Tambah mata pelajaran" });
   const reports = reportCardsQuery.data ?? [];
   const stats = [
     { label: "Total Raport", value: reports.length, color: "text-cyan-700", iconClass: "bg-cyan-50 text-cyan-700", icon: BookOpenCheck },
@@ -123,7 +148,7 @@ export default function ReportCardsPage() {
           </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (open && activeYearId && !academicYearId) setAcademicYearId(activeYearId); }}>
             <DialogTrigger asChild>
-              <Button className="bg-slate-950 hover:bg-slate-800"><Plus className="mr-2 h-4 w-4" /> Buat Raport</Button>
+              <Button className="bg-slate-950 hover:bg-slate-800" disabled={missingPrereqs.length > 0}><Plus className="mr-2 h-4 w-4" /> Buat Raport</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
@@ -168,6 +193,28 @@ export default function ReportCardsPage() {
             </DialogContent>
           </Dialog>
         </motion.div>
+
+        {/* Prerequisite Warnings */}
+        {missingPrereqs.length > 0 && (
+          <motion.div className="space-y-2" variants={fadeInDown}>
+            {missingPrereqs.map((prereq) => (
+              <div key={prereq.label} className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-amber-800">
+                    Belum ada {prereq.label}
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    Anda perlu menyiapkan {prereq.label.toLowerCase()} sebelum membuat raport digital.
+                  </p>
+                </div>
+                <Button asChild size="sm" variant="outline" className="border-amber-300 text-amber-800 hover:bg-amber-100 shrink-0">
+                  <Link href={prereq.href}>{prereq.action}</Link>
+                </Button>
+              </div>
+            ))}
+          </motion.div>
+        )}
 
         {/* Stats Cards */}
         <motion.div className="grid gap-4 md:grid-cols-3" variants={staggerContainer}>

@@ -13,9 +13,10 @@ import {
   LogOut,
   Menu,
   X,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
@@ -24,6 +25,7 @@ interface MenuItem {
   icon: React.ComponentType<{ className?: string }>;
   href?: string;
   submenu?: { title: string; href: string }[];
+  allowedRoles?: UserRole[];
 }
 
 const menuItems: MenuItem[] = [
@@ -73,23 +75,45 @@ const menuItems: MenuItem[] = [
       { title: 'Tentang Kami Foto', href: '/admin/gallery/tentang_kami_photos' },
     ],
   },
+  {
+    title: 'Pengaturan',
+    icon: Settings,
+    allowedRoles: ['super_admin', 'admin'],
+    submenu: [
+      { title: 'Profil Sekolah', href: '/admin/settings/school-profile' },
+      { title: 'Pengguna', href: '/admin/users' },
+    ],
+  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { signOut, user } = useAuth();
+  const { signOut, user, profile } = useAuth();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (!item.allowedRoles) return true;
+    if (!profile) return false;
+    return item.allowedRoles.includes(profile.role);
+  });
+
+  const roleLabels: Record<UserRole, string> = {
+    super_admin: 'Super Admin',
+    admin: 'Admin',
+    editor: 'Editor',
+    viewer: 'Viewer',
+  };
+
   // Auto-open menu based on current path
   useEffect(() => {
-    for (const item of menuItems) {
+    for (const item of visibleMenuItems) {
       if (item.submenu?.some(sub => pathname.startsWith(sub.href))) {
         setOpenMenu(item.title);
         break;
       }
     }
-  }, [pathname]);
+  }, [pathname, visibleMenuItems]);
 
   const toggleMenu = (title: string) => {
     setOpenMenu((prev) => (prev === title ? null : title));
@@ -119,7 +143,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => (
+        {visibleMenuItems.map((item) => (
           <div key={item.title}>
             {item.href ? (
               <Link
@@ -179,8 +203,13 @@ export function Sidebar() {
 
       <div className="p-4 border-t bg-slate-50/70">
         <div className="mb-3 rounded-lg bg-white px-3 py-2 shadow-sm">
-          <p className="text-sm font-medium truncate">{user?.email}</p>
-          <p className="text-xs text-muted-foreground">Administrator</p>
+          <p className="text-sm font-medium truncate">{profile?.full_name || user?.email}</p>
+          <p className="text-xs text-muted-foreground">
+            {profile?.full_name && user?.email && profile.full_name !== user.email ? (
+              <span className="block truncate">{user.email}</span>
+            ) : null}
+            {profile ? roleLabels[profile.role] : 'Loading...'}
+          </p>
         </div>
         <Button
           onClick={handleSignOut}

@@ -1,43 +1,100 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
+export type UserRole = 'super_admin' | 'admin' | 'editor' | 'viewer';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
+  profile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  profile: null,
   loading: true,
   signIn: async () => {},
   signOut: async () => {},
+  refreshProfile: async () => {},
+  isAdmin: false,
+  isSuperAdmin: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+  const fetchProfile = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, role, is_active, created_at, updated_at')
+      .eq('id', userId)
+      .single();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      (async () => {
-        setUser(session?.user ?? null);
-      })();
+    if (error) {
+      console.error('[AuthContext] Failed to fetch profile:', error.message);
+    }
+
+    if (data) {
+      setProfile(data as UserProfile);
+    }
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (user) {
+      await fetchProfile(user.id);
+    }
+  }, [user, fetchProfile]);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        await fetchProfile(currentUser.id);
+      }
+
+      setLoading(false);
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        await fetchProfile(currentUser.id);
+      } else {
+        setProfile(null);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchProfile]);
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -49,6 +106,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (data.user) {
       setUser(data.user);
+      await fetchProfile(data.user.id);
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_active')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileData && !profileData.is_active) {
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        throw new Error('Akun Anda telah dinonaktifkan. Hubungi administrator.');
+      }
+
       router.push('/admin/dashboard');
     }
   };
@@ -56,11 +128,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setProfile(null);
     router.push('/admin/login');
   };
 
+  const role = profile?.role;
+  const isAdmin = role === 'super_admin' || role === 'admin';
+  const isSuperAdmin = role === 'super_admin';
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      profile,
+      loading,
+      signIn,
+      signOut,
+      refreshProfile,
+      isAdmin,
+      isSuperAdmin,
+    }}>
       {children}
     </AuthContext.Provider>
   );
