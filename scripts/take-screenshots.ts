@@ -129,6 +129,7 @@ async function main() {
     ['12-gallery-photos', '/admin/gallery/photos'],
     ['13-settings-school-profile', '/admin/settings/school-profile'],
     ['14-users', '/admin/users'],
+    ['15-ranking', '/admin/rankings'],
   ];
 
   for (const [name, url] of pages) {
