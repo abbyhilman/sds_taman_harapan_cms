@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const manualSignOutRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
@@ -103,9 +104,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled) return;
       const currentUser = session?.user ?? null;
+
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        console.warn('[AuthContext] Token refresh failed, forcing sign out');
+        await supabase.auth.signOut();
+        manualSignOutRef.current = false;
+        setUser(null);
+        setProfile(null);
+        queryClient.clear();
+        router.push('/admin/login?reason=session_expired');
+        return;
+      }
+
       setUser(currentUser);
 
       if (currentUser) {
@@ -114,6 +127,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
         queryClient.clear();
+
+        if (!manualSignOutRef.current) {
+          router.push('/admin/login?reason=session_expired');
+        }
+        manualSignOutRef.current = false;
       }
     });
 
@@ -154,6 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    manualSignOutRef.current = true;
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);

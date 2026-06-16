@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AnimatedButton } from '@/components/ui/animated-button';
 import { Input } from '@/components/ui/input';
@@ -16,10 +16,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (searchParams.get('reason') === 'session_expired') {
+      setSessionExpired(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -92,6 +100,22 @@ export default function LoginPage() {
             </div>
           </CardHeader>
           <CardContent>
+            <AnimatePresence>
+              {sessionExpired && (
+                <motion.div
+                  className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  <LogOut className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-800">Sesi Berakhir</p>
+                    <p className="text-sm text-amber-700">Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
