@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { MiniAreaChart, PpdbDonutChart } from '@/components/admin/DashboardCharts';
 
@@ -114,6 +115,8 @@ const contentItemVariants = {
 };
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+
   const {
     data: stats = emptyStats,
     isLoading,
@@ -138,6 +141,7 @@ export default function DashboardPage() {
       ]);
       return { programs, facilities, achievements, news, photos, videos, registrations, acceptedRegistrations, activeStudents };
     },
+    enabled: !!user,
   });
 
   const cards = useMemo(() => [

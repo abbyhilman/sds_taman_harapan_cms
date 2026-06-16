@@ -207,6 +207,21 @@ export default function ReportCardPreviewPage() {
     enabled: !!reportCardId,
   });
 
+  // 3. Fetch Ranking Data
+  const { data: rankingData } = useQuery({
+    queryKey: ["report-ranking", reportCardId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("class_rankings")
+        .select("rank_position, rank_total, average_score")
+        .eq("report_card_id", reportCardId)
+        .single();
+      if (error) return null;
+      return data as { rank_position: number; rank_total: number; average_score: number } | null;
+    },
+    enabled: !!reportCardId,
+  });
+
   // Derive appreciation, recommendation, focus_areas, strength_note from homeroom_notes JSON
   const { appreciation, recommendation, focusAreas, strengthNote, attendanceNote, semesterComparison } = useMemo(() => {
     let appreciationText = "";
@@ -285,6 +300,26 @@ export default function ReportCardPreviewPage() {
     };
   }, [grades]);
 
+  const hasGrades = grades && grades.length > 0 && grades.some(
+    (g) => g.knowledge_score !== null || g.skill_score !== null
+  );
+
+  const autoAiTriggered = useRef(false);
+  useEffect(() => {
+    if (
+      !autoAiTriggered.current &&
+      report &&
+      hasGrades &&
+      !report.homeroom_notes &&
+      stats &&
+      stats.completionRate >= 50 &&
+      !aiLoading
+    ) {
+      autoAiTriggered.current = true;
+      handleRegenerateAI();
+    }
+  }, [report, hasGrades, stats, aiLoading]);
+
   if (reportLoading || gradesLoading) {
     return <div className="min-h-screen bg-white p-6"><PageLoading text="Memuat rapor..." /></div>;
   }
@@ -294,10 +329,6 @@ export default function ReportCardPreviewPage() {
   }
 
   const student = report.students;
-
-  const hasGrades = grades && grades.length > 0 && grades.some(
-    (g) => g.knowledge_score !== null || g.skill_score !== null
-  );
 
   if (!hasGrades) {
     return (
@@ -366,23 +397,6 @@ export default function ReportCardPreviewPage() {
       setAiLoading(false);
     }
   };
-
-  // Auto-generate AI notes on first preview load if grades exist but no AI notes yet
-  const autoAiTriggered = useRef(false);
-  useEffect(() => {
-    if (
-      !autoAiTriggered.current &&
-      report &&
-      hasGrades &&
-      !report.homeroom_notes &&
-      stats &&
-      stats.completionRate >= 50 &&
-      !aiLoading
-    ) {
-      autoAiTriggered.current = true;
-      handleRegenerateAI();
-    }
-  }, [report, hasGrades, stats, aiLoading]);
 
   // Save the modified notes back to the Supabase database
   const handleSaveAI = async () => {
@@ -536,6 +550,21 @@ export default function ReportCardPreviewPage() {
                       {stats.completedCount} / {stats.totalCount} Mapel ({stats.completionRate}%)
                     </Badge>
                   </div>
+
+                  {/* Ranking */}
+                  {rankingData && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-slate-500">Ranking</span>
+                      <Badge variant="outline" className={cn(
+                        "font-bold text-sm",
+                        rankingData.rank_position === 1 ? "bg-amber-50 text-amber-700 border-amber-200" :
+                        rankingData.rank_position <= 3 ? "bg-blue-50 text-blue-700 border-blue-200" :
+                        "bg-slate-50 text-slate-700 border-slate-200"
+                      )}>
+                        {rankingData.rank_position} / {rankingData.rank_total}
+                      </Badge>
+                    </div>
+                  )}
 
                   {/* Top Subjects */}
                   {stats.topSubjects.length > 0 && (

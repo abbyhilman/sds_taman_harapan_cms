@@ -56,6 +56,7 @@ const menuItems: MenuItem[] = [
     submenu: [
       { title: 'Daftar Siswa', href: '/admin/students' },
       { title: 'Raport Digital', href: '/admin/report-cards' },
+      { title: 'Ranking Siswa', href: '/admin/rankings' },
       { title: 'Master Data', href: '/admin/master-data' },
       { title: 'Template Raport', href: '/admin/raport-templates' },
     ],

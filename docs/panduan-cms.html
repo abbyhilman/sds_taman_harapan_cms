@@ -355,7 +355,7 @@
     <p class="cover-subtitle">Content Management System (CMS)</p>
     <p class="cover-school">SDS Taman Harapan</p>
     <div class="cover-meta">
-      <p><strong>Versi Dokumen:</strong> 1.0</p>
+      <p><strong>Versi Dokumen:</strong> 1.1</p>
       <p><strong>Tanggal:</strong> Juni 2026</p>
       <p><strong>Ditujukan untuk:</strong> Administrator dan Staff Sekolah</p>
     </div>
@@ -816,7 +816,7 @@
 
       <div class="screenshot-wrapper">
         <img src="screenshots/10-master-data.png" alt="Master Data">
-        <p class="screenshot-caption">Gambar: Halaman Master Data — Tahun Akademik, Mata Pelajaran, Ekstrakurikuler</p>
+        <p class="screenshot-caption">Gambar: Halaman Master Data — Tahun Akademik, Mata Pelajaran, Ekstrakurikuler, Sub-Kelas</p>
       </div>
       <div class="annotation-list">
         <h5>📌 Petunjuk Elemen:</h5>
@@ -824,6 +824,7 @@
           <li><strong>Tab "Tahun Akademik"</strong> — Klik untuk mengelola tahun akademik (aktif/nonaktif)</li>
           <li><strong>Tab "Mata Pelajaran"</strong> — Klik untuk menambah/edit mata pelajaran dan urutannya</li>
           <li><strong>Tab "Ekstrakurikuler"</strong> — Klik untuk mengelola kegiatan ekstrakurikuler</li>
+          <li><strong>Tab "Sub-Kelas"</strong> — Klik untuk mengelola pembagian kelas (contoh: 1A, 2B, atau Kelas 1 tanpa seksi)</li>
           <li><strong>Tombol Tambah (+)</strong> — Tersedia di setiap tab untuk menambah data baru</li>
         </ol>
       </div>
@@ -852,6 +853,29 @@
         <li>Atur urutan tampilan</li>
       </ul>
 
+      <h4>D. Sub-Kelas</h4>
+      <p>Kelola pembagian kelas per tingkat. Setiap kelas dapat memiliki seksi (misalnya 1A, 1B) atau tanpa seksi untuk sekolah dengan satu kelas per tingkat.</p>
+      <ul>
+        <li><strong>Tambah Sub-Kelas:</strong> Klik tombol "Tambah Kelas" di pojok kanan atas tab Sub-Kelas</li>
+        <li><strong>Field yang tersedia:</strong>
+          <ul>
+            <li>Nama Kelas (wajib) — contoh: "Kelas 1A" atau "Kelas 1"</li>
+            <li>Tingkat (wajib) — pilih dari Kelas 1 sampai Kelas 6</li>
+            <li>Seksi (opsional) — huruf A/B/C/D, atau "Tidak Ada" jika hanya satu kelas per tingkat</li>
+            <li>Tahun Ajaran — hubungkan ke tahun ajaran yang aktif</li>
+            <li>Wali Kelas — nama wali kelas (opsional)</li>
+            <li>Kapasitas — jumlah maksimal siswa per kelas</li>
+            <li>Status Aktif — nonaktifkan kelas yang sudah tidak digunakan</li>
+          </ul>
+        </li>
+        <li><strong>Edit/Hapus:</strong> Klik ikon tiga titik pada baris kelas untuk mengedit atau menghapus</li>
+      </ul>
+
+      <div class="info-box success">
+        <p class="info-box-title">💡 Tips</p>
+        <p>Sub-kelas yang dibuat di sini akan otomatis muncul sebagai pilihan di form tambah/edit siswa dan filter kelas di halaman Daftar Siswa. Pastikan setiap siswa di-assign ke sub-kelas yang benar.</p>
+      </div>
+
       <h2>5.4 Template Rapor</h2>
       <p>Kelola template rapor yang menentukan layout dan komponen rapor PDF.</p>
 
@@ -866,6 +890,45 @@
       <div class="info-box">
         <p class="info-box-title">ℹ️ Catatan</p>
         <p>Hanya satu template yang dapat aktif pada satu waktu. Template aktif akan digunakan untuk semua rapor baru yang dibuat.</p>
+      </div>
+
+      <h2>5.5 Ranking Siswa</h2>
+      <p>Lihat peringkat siswa berdasarkan rata-rata nilai rapor per kelas, semester, dan tahun ajaran. Ranking dihitung secara otomatis dari nilai rapor yang sudah diinput.</p>
+
+      <h3>Mengakses Ranking Siswa:</h3>
+      <ol class="steps">
+        <li>Buka menu <strong>Akademik</strong> di sidebar, lalu klik <strong>Ranking Siswa</strong></li>
+        <li>Halaman ranking akan menampilkan daftar peringkat siswa yang dikelompokkan per kelas</li>
+      </ol>
+
+      <h3>Fitur Filter:</h3>
+      <div class="annotation-list">
+        <h5>📌 Petunjuk Elemen:</h5>
+        <ol>
+          <li><strong>Tombol Semester</strong> — Toggle berbentuk pill untuk memilih Semua, Ganjil, atau Genap</li>
+          <li><strong>Filter Kelas</strong> — Dropdown untuk memilih kelas tertentu atau semua kelas</li>
+          <li><strong>Filter Tahun Ajaran</strong> — Dropdown untuk memilih tahun ajaran</li>
+          <li><strong>Kolom Pencarian</strong> — Cari siswa berdasarkan nama secara real-time</li>
+          <li><strong>Chip Filter Aktif</strong> — Menampilkan filter yang sedang aktif, klik untuk menghapus filter</li>
+        </ol>
+      </div>
+
+      <h3>Tampilan Ranking:</h3>
+      <ul>
+        <li><strong>Kartu Statistik:</strong> Total siswa ter-rank, jumlah kelas aktif, dan nilai tertinggi</li>
+        <li><strong>Podium Juara:</strong> Saat memfilter satu kelas tertentu, tiga siswa terbaik ditampilkan dalam format podium (Juara 1, 2, dan 3)</li>
+        <li><strong>Tabel Ranking:</strong> Menampilkan posisi, nama siswa, NISN, rata-rata nilai dengan progress bar, dan posisi dari total siswa</li>
+        <li><strong>Indikator Visual:</strong> Warna skor berubah berdasarkan nilai — hijau (90+), biru (80+), kuning (70+), merah (di bawah 70)</li>
+      </ul>
+
+      <div class="info-box success">
+        <p class="info-box-title">💡 Tips</p>
+        <p>Ranking juga muncul di halaman Preview Rapor siswa. Pada kartu statistik di sebelah kanan, Anda dapat melihat badge ranking siswa tersebut di kelasnya. Ini memudahkan wali kelas untuk melihat posisi siswa tanpa harus membuka halaman Ranking Siswa secara terpisah.</p>
+      </div>
+
+      <div class="info-box warning">
+        <p class="info-box-title">⚠️ Perhatian</p>
+        <p>Ranking dihitung berdasarkan rata-rata dari nilai pengetahuan dan keterampilan semua mata pelajaran. Pastikan semua nilai sudah diinput dengan benar sebelum menggunakan ranking sebagai acuan. Data ranking akan otomatis terupdate setiap kali nilai rapor diubah.</p>
       </div>
     </section>
 
@@ -1195,7 +1258,7 @@
 
       <div class="page-footer">
         <p><strong>Panduan Penggunaan CMS SDS Taman Harapan</strong></p>
-        <p>Versi 1.0 - Juni 2026</p>
+        <p>Versi 1.1 - Juni 2026</p>
         <p>Dokumen ini bersifat rahasia dan hanya untuk penggunaan internal sekolah.</p>
       </div>
     </section>

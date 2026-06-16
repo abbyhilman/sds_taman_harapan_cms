@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
@@ -68,33 +70,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, fetchProfile]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (cancelled) return;
+        setUser(authUser);
 
-      if (currentUser) {
-        await fetchProfile(currentUser.id);
+        if (authUser) {
+          await fetchProfile(authUser.id);
+        }
+      } catch (err) {
+        console.error('[AuthContext] initAuth failed:', err);
+        if (!cancelled) {
+          setUser(null);
+          setProfile(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-
-      setLoading(false);
     };
+
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        console.warn('[AuthContext] Auth init timed out after 15s');
+        setLoading(false);
+      }
+    }, 15000);
 
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (cancelled) return;
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
       if (currentUser) {
         await fetchProfile(currentUser.id);
+        queryClient.invalidateQueries();
       } else {
         setProfile(null);
+        queryClient.clear();
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
+  }, [fetchProfile, queryClient]);
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({

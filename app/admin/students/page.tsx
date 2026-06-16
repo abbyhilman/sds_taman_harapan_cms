@@ -70,6 +70,7 @@ interface Student {
   religion: string | null;
   address: string | null;
   current_class: string;
+  classroom_id: string | null;
   avatar_url: string | null;
   parent_name: string;
   parent_phone: string;
@@ -110,6 +111,7 @@ type StudentForm = {
   religion: string;
   address: string;
   current_class: string;
+  classroom_id: string;
   parent_name: string;
   parent_phone: string;
   parent_email: string;
@@ -121,6 +123,7 @@ type ImportForm = {
   registrationId: string;
   nisn: string;
   currentClass: string;
+  classroomId: string;
 };
 
 const classOptions = ["Kelas 1", "Kelas 2", "Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
@@ -137,6 +140,7 @@ const emptyStudentForm: StudentForm = {
   religion: "Islam",
   address: "",
   current_class: "Kelas 1",
+  classroom_id: "",
   parent_name: "",
   parent_phone: "",
   parent_email: "",
@@ -179,6 +183,7 @@ const mapStudentToForm = (student: Student): StudentForm => ({
   religion: student.religion ?? "Islam",
   address: student.address ?? "",
   current_class: student.current_class,
+  classroom_id: student.classroom_id ?? "",
   parent_name: student.parent_name,
   parent_phone: student.parent_phone,
   parent_email: student.parent_email ?? "",
@@ -203,6 +208,7 @@ export default function StudentsPage() {
     registrationId: "",
     nisn: "",
     currentClass: "Kelas 1",
+    classroomId: "",
   });
 
   const studentsQuery = useQuery({
@@ -279,6 +285,21 @@ export default function StudentsPage() {
     },
   });
 
+  const classroomsQuery = useQuery({
+    queryKey: ["classrooms"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("classrooms")
+        .select("id, grade_level, section, display_name, is_active")
+        .eq("is_active", true)
+        .order("grade_level", { ascending: true })
+        .order("section", { ascending: true });
+
+      if (error) throw error;
+      return (data ?? []) as { id: string; grade_level: number; section: string | null; display_name: string; is_active: boolean }[];
+    },
+  });
+
   const overview = useMemo(() => {
     const students = overviewQuery.data ?? [];
     return {
@@ -299,7 +320,12 @@ export default function StudentsPage() {
 
   const openCreateDialog = () => {
     setEditingStudent(null);
-    setForm({ ...emptyStudentForm, current_class: classFilter === "all" ? "Kelas 1" : classFilter });
+    const matchedRoom = classroomsQuery.data?.find((c) => c.display_name === classFilter);
+    setForm({
+      ...emptyStudentForm,
+      current_class: classFilter === "all" ? "Kelas 1" : classFilter,
+      classroom_id: matchedRoom?.id || "",
+    });
     setIsStudentDialogOpen(true);
   };
 
@@ -332,6 +358,9 @@ export default function StudentsPage() {
         throw new Error("Lengkapi NISN, nama siswa, tanggal lahir, kelas, dan data orang tua.");
       }
 
+      const selectedClassroom = classroomsQuery.data?.find((c) => c.id === form.classroom_id);
+      const currentClass = selectedClassroom?.display_name || form.current_class;
+
       const payload = {
         nisn: form.nisn.trim(),
         full_name: form.full_name.trim(),
@@ -341,7 +370,8 @@ export default function StudentsPage() {
         birth_date: form.birth_date,
         religion: form.religion.trim(),
         address: form.address.trim(),
-        current_class: form.current_class,
+        current_class: currentClass,
+        classroom_id: form.classroom_id || null,
         parent_name: form.parent_name.trim(),
         parent_phone: form.parent_phone.trim(),
         parent_email: form.parent_email.trim(),
@@ -430,6 +460,7 @@ export default function StudentsPage() {
           religion: registration.religion ?? "Islam",
           address: registration.address ?? "",
           current_class: importForm.currentClass,
+          classroom_id: importForm.classroomId || null,
           parent_name: registration.parent_name,
           parent_phone: registration.parent_phone,
           parent_email: registration.parent_email ?? "",
@@ -449,7 +480,7 @@ export default function StudentsPage() {
         title: "Import PPDB berhasil",
         description: "Data calon siswa sudah masuk ke daftar siswa aktif.",
       });
-      setImportForm({ registrationId: "", nisn: "", currentClass: "Kelas 1" });
+      setImportForm({ registrationId: "", nisn: "", currentClass: "Kelas 1", classroomId: "" });
       setIsImportDialogOpen(false);
     },
     onError: (error) => {
@@ -525,9 +556,12 @@ export default function StudentsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Kelas</SelectItem>
-                {classOptions.map((className) => (
-                  <SelectItem key={className} value={className}>
-                    {className}
+                {(classroomsQuery.data?.length
+                  ? classroomsQuery.data
+                  : classOptions.map((name, i) => ({ id: String(i), display_name: name, grade_level: i + 1, section: "" }))
+                ).map((room) => (
+                  <SelectItem key={room.display_name} value={room.display_name}>
+                    {room.display_name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -771,15 +805,30 @@ export default function StudentsPage() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Kelas *" id="current_class">
-              <Select value={form.current_class} onValueChange={(value) => updateForm("current_class", value)}>
-                <SelectTrigger id="current_class">
-                  <SelectValue />
+            <Field label="Kelas *" id="classroom_id">
+              <Select
+                value={form.classroom_id || "_legacy"}
+                onValueChange={(value) => {
+                  const room = classroomsQuery.data?.find((c) => c.id === value);
+                  setForm((prev) => ({
+                    ...prev,
+                    classroom_id: value === "_legacy" ? "" : value,
+                    current_class: room?.display_name || prev.current_class,
+                  }));
+                }}
+              >
+                <SelectTrigger id="classroom_id">
+                  <SelectValue placeholder="Pilih kelas" />
                 </SelectTrigger>
                 <SelectContent>
-                  {classOptions.map((className) => (
-                    <SelectItem key={className} value={className}>
-                      {className}
+                  {!classroomsQuery.data?.length && (
+                    <SelectItem value="_legacy">
+                      {form.current_class || "Kelas 1"}
+                    </SelectItem>
+                  )}
+                  {(classroomsQuery.data ?? []).map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.display_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -915,16 +964,24 @@ export default function StudentsPage() {
               </Field>
               <Field label="Masukkan ke Kelas" id="import-class">
                 <Select
-                  value={importForm.currentClass}
-                  onValueChange={(value) => setImportForm((prev) => ({ ...prev, currentClass: value }))}
+                  value={importForm.classroomId || "_none"}
+                  onValueChange={(value) => {
+                    const room = classroomsQuery.data?.find((c) => c.id === value);
+                    setImportForm((prev) => ({
+                      ...prev,
+                      classroomId: value === "_none" ? "" : value,
+                      currentClass: room?.display_name || prev.currentClass,
+                    }));
+                  }}
                 >
                   <SelectTrigger id="import-class">
-                    <SelectValue />
+                    <SelectValue placeholder="Pilih kelas" />
                   </SelectTrigger>
                   <SelectContent>
-                    {classOptions.map((className) => (
-                      <SelectItem key={className} value={className}>
-                        {className}
+                    <SelectItem value="_none">Tidak dipilih</SelectItem>
+                    {(classroomsQuery.data ?? []).map((room) => (
+                      <SelectItem key={room.id} value={room.id}>
+                        {room.display_name}
                       </SelectItem>
                     ))}
                   </SelectContent>

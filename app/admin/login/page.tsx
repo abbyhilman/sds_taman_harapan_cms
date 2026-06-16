@@ -10,6 +10,7 @@ import { AnimatedButton } from '@/components/ui/animated-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, user } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (user) {
@@ -32,6 +34,7 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
+      queryClient.invalidateQueries({ queryKey: ['dashboard_stats'] });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat login');
     } finally {

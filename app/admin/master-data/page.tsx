@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CalendarDays, Database, Loader2, MoreHorizontal, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { AlertCircle, CalendarDays, Database, Loader2, MoreHorizontal, Pencil, Plus, Sparkles, Trash2, Users } from "lucide-react";
 import { PageLoading } from "@/components/ui/loading";
 import { staggerContainer, staggerItem, fadeInDown } from "@/components/ui/animated";
 import {
@@ -85,10 +85,24 @@ interface Extracurricular {
   updated_at: string | null;
 }
 
+interface Classroom {
+  id: string;
+  grade_level: number;
+  section: string | null;
+  display_name: string;
+  academic_year_id: string | null;
+  homeroom_teacher: string;
+  capacity: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
 type DeleteTarget =
   | { type: "academic_years"; id: string; label: string }
   | { type: "subjects"; id: string; label: string }
-  | { type: "extracurriculars"; id: string; label: string };
+  | { type: "extracurriculars"; id: string; label: string }
+  | { type: "classrooms"; id: string; label: string };
 
 const emptyAcademicYear = {
   year_name: "",
@@ -110,6 +124,16 @@ const emptyExtracurricular = {
   order_position: "0",
 };
 
+const emptyClassroom = {
+  grade_level: "1",
+  section: "",
+  display_name: "",
+  academic_year_id: "",
+  homeroom_teacher: "",
+  capacity: "30",
+  is_active: true,
+};
+
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Terjadi kesalahan. Silakan coba lagi.";
 
@@ -119,12 +143,15 @@ export default function MasterDataPage() {
   const [academicYearDialog, setAcademicYearDialog] = useState(false);
   const [subjectDialog, setSubjectDialog] = useState(false);
   const [extracurricularDialog, setExtracurricularDialog] = useState(false);
+  const [classroomDialog, setClassroomDialog] = useState(false);
   const [editingAcademicYear, setEditingAcademicYear] = useState<AcademicYear | null>(null);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [editingExtracurricular, setEditingExtracurricular] = useState<Extracurricular | null>(null);
+  const [editingClassroom, setEditingClassroom] = useState<Classroom | null>(null);
   const [academicYearForm, setAcademicYearForm] = useState(emptyAcademicYear);
   const [subjectForm, setSubjectForm] = useState(emptySubject);
   const [extracurricularForm, setExtracurricularForm] = useState(emptyExtracurricular);
+  const [classroomForm, setClassroomForm] = useState(emptyClassroom);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
 
   const academicYearsQuery = useQuery({
@@ -168,6 +195,20 @@ export default function MasterDataPage() {
     },
   });
 
+  const classroomsQuery = useQuery({
+    queryKey: ["classrooms"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("classrooms")
+        .select("*, academic_years(year_name)")
+        .order("grade_level", { ascending: true })
+        .order("section", { ascending: true });
+
+      if (error) throw error;
+      return (data ?? []) as (Classroom & { academic_years: { year_name: string } | null })[];
+    },
+  });
+
   const resetAcademicYearDialog = () => {
     setEditingAcademicYear(null);
     setAcademicYearForm(emptyAcademicYear);
@@ -184,6 +225,12 @@ export default function MasterDataPage() {
     setEditingExtracurricular(null);
     setExtracurricularForm(emptyExtracurricular);
     setExtracurricularDialog(false);
+  };
+
+  const resetClassroomDialog = () => {
+    setEditingClassroom(null);
+    setClassroomForm(emptyClassroom);
+    setClassroomDialog(false);
   };
 
   const saveAcademicYear = useMutation({
@@ -322,6 +369,52 @@ export default function MasterDataPage() {
     },
   });
 
+  const saveClassroom = useMutation({
+    mutationFn: async () => {
+      if (!classroomForm.display_name.trim()) {
+        throw new Error("Nama kelas wajib diisi.");
+      }
+
+      const payload = {
+        grade_level: Number(classroomForm.grade_level) || 1,
+        section: classroomForm.section.trim().toUpperCase() || null,
+        display_name: classroomForm.display_name.trim(),
+        academic_year_id: classroomForm.academic_year_id || null,
+        homeroom_teacher: classroomForm.homeroom_teacher.trim(),
+        capacity: Number(classroomForm.capacity) || 30,
+        is_active: classroomForm.is_active,
+      };
+
+      if (editingClassroom) {
+        const { error } = await supabase
+          .from("classrooms")
+          .update(payload)
+          .eq("id", editingClassroom.id);
+        if (error) throw error;
+        return "updated";
+      }
+
+      const { error } = await supabase.from("classrooms").insert([payload]);
+      if (error) throw error;
+      return "created";
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classrooms"] });
+      toast({
+        title: "Kelas tersimpan",
+        description: "Data kelas sudah diperbarui.",
+      });
+      resetClassroomDialog();
+    },
+    onError: (error) => {
+      toast({
+        title: "Gagal menyimpan kelas",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (target: DeleteTarget) => {
       const { error } = await supabase.from(target.type).delete().eq("id", target.id);
@@ -333,6 +426,7 @@ export default function MasterDataPage() {
         academic_years: "academic-years",
         subjects: "subjects",
         extracurriculars: "extracurriculars",
+        classrooms: "classrooms",
       };
       queryClient.invalidateQueries({ queryKey: [queryKeyMap[type]] });
       toast({
@@ -370,7 +464,7 @@ export default function MasterDataPage() {
           </p>
         </motion.div>
 
-        <motion.div className="grid gap-4 md:grid-cols-3" variants={staggerItem}>
+        <motion.div className="grid gap-4 md:grid-cols-4" variants={staggerItem}>
         <SummaryCard
           title="Tahun Ajaran"
           value={academicYearsQuery.data?.length ?? 0}
@@ -386,14 +480,20 @@ export default function MasterDataPage() {
           value={extracurricularsQuery.data?.length ?? 0}
           icon={Sparkles}
         />
+        <SummaryCard
+          title="Sub-Kelas"
+          value={classroomsQuery.data?.length ?? 0}
+          icon={Users}
+        />
         </motion.div>
 
         <motion.div variants={staggerItem}>
         <Tabs defaultValue="academic-years" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[560px]">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[680px]">
           <TabsTrigger value="academic-years">Tahun Ajaran</TabsTrigger>
           <TabsTrigger value="subjects">Mata Pelajaran</TabsTrigger>
           <TabsTrigger value="extracurriculars">Ekskul</TabsTrigger>
+          <TabsTrigger value="classrooms">Sub-Kelas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="academic-years">
@@ -632,6 +732,103 @@ export default function MasterDataPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="classrooms">
+          <Card>
+            <CardHeader className="gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <CardTitle>Sub-Kelas</CardTitle>
+                <CardDescription>
+                  Pecah kelas tingkat menjadi sub-kelas (1A, 1B, dst.) untuk ranking yang lebih akurat.
+                </CardDescription>
+              </div>
+              <Button
+                onClick={() => {
+                  setEditingClassroom(null);
+                  setClassroomForm(emptyClassroom);
+                  setClassroomDialog(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Tambah Kelas
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <DataError error={classroomsQuery.error} />
+              <div className="rounded-lg border bg-white">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Kelas</TableHead>
+                      <TableHead>Seksi</TableHead>
+                      <TableHead>Tingkat</TableHead>
+                      <TableHead>Wali Kelas</TableHead>
+                      <TableHead>Kapasitas</TableHead>
+                      <TableHead>Tahun Ajaran</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-12" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {classroomsQuery.isLoading ? (
+                      <LoadingRow colSpan={8} />
+                    ) : classroomsQuery.data?.length ? (
+                      classroomsQuery.data.map((room) => (
+                        <TableRow key={room.id}>
+                          <TableCell className="font-semibold">{room.display_name}</TableCell>
+                          <TableCell>
+                            {room.section ? (
+                              <Badge variant="outline" className="font-mono text-xs">{room.section}</Badge>
+                            ) : (
+                              <span className="text-slate-400 text-xs">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>Kelas {room.grade_level}</TableCell>
+                          <TableCell>{room.homeroom_teacher || "-"}</TableCell>
+                          <TableCell>{room.capacity}</TableCell>
+                          <TableCell>{room.academic_years?.year_name || "-"}</TableCell>
+                          <TableCell>
+                            {room.is_active ? (
+                              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Aktif</Badge>
+                            ) : (
+                              <Badge variant="outline">Nonaktif</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <RowActions
+                              onEdit={() => {
+                                setEditingClassroom(room);
+                                setClassroomForm({
+                                  grade_level: String(room.grade_level),
+                                  section: room.section || "",
+                                  display_name: room.display_name,
+                                  academic_year_id: room.academic_year_id || "",
+                                  homeroom_teacher: room.homeroom_teacher || "",
+                                  capacity: String(room.capacity),
+                                  is_active: room.is_active,
+                                });
+                                setClassroomDialog(true);
+                              }}
+                              onDelete={() =>
+                                setDeleteTarget({
+                                  type: "classrooms",
+                                  id: room.id,
+                                  label: room.display_name,
+                                })
+                              }
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <EmptyRow colSpan={8} label="Belum ada sub-kelas." />
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
       </motion.div>
 
@@ -819,6 +1016,120 @@ export default function MasterDataPage() {
             </Button>
             <Button onClick={() => saveExtracurricular.mutate()} disabled={saveExtracurricular.isPending}>
               {saveExtracurricular.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Simpan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={classroomDialog} onOpenChange={setClassroomDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingClassroom ? "Edit Sub-Kelas" : "Tambah Sub-Kelas"}</DialogTitle>
+            <DialogDescription>
+              Sub-kelas digunakan untuk mengelompokkan siswa dan menghitung ranking per kelas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Field label="Nama Kelas *" id="classroom_display_name">
+              <Input
+                id="classroom_display_name"
+                placeholder="Kelas 1A"
+                value={classroomForm.display_name}
+                onChange={(event) =>
+                  setClassroomForm((prev) => ({ ...prev, display_name: event.target.value }))
+                }
+              />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Tingkat *" id="classroom_grade">
+                <Select
+                  value={classroomForm.grade_level}
+                  onValueChange={(value) => setClassroomForm((prev) => ({ ...prev, grade_level: value }))}
+                >
+                  <SelectTrigger id="classroom_grade">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6].map((n) => (
+                      <SelectItem key={n} value={String(n)}>Kelas {n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Seksi (Opsional)" id="classroom_section">
+                <Select
+                  value={classroomForm.section || "_none"}
+                  onValueChange={(value) => setClassroomForm((prev) => ({ ...prev, section: value === "_none" ? "" : value }))}
+                >
+                  <SelectTrigger id="classroom_section">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">- Tidak Ada -</SelectItem>
+                    {["A", "B", "C", "D"].map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
+            <Field label="Tahun Ajaran" id="classroom_year">
+              <Select
+                value={classroomForm.academic_year_id || "_none"}
+                onValueChange={(value) =>
+                  setClassroomForm((prev) => ({ ...prev, academic_year_id: value === "_none" ? "" : value }))
+                }
+              >
+                <SelectTrigger id="classroom_year">
+                  <SelectValue placeholder="Pilih tahun ajaran" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Tidak ada</SelectItem>
+                  {(academicYearsQuery.data ?? []).map((y) => (
+                    <SelectItem key={y.id} value={y.id}>{y.year_name}{y.is_active ? " (Aktif)" : ""}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Wali Kelas" id="classroom_teacher">
+              <Input
+                id="classroom_teacher"
+                placeholder="Nama wali kelas"
+                value={classroomForm.homeroom_teacher}
+                onChange={(event) =>
+                  setClassroomForm((prev) => ({ ...prev, homeroom_teacher: event.target.value }))
+                }
+              />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Kapasitas" id="classroom_capacity">
+                <Input
+                  id="classroom_capacity"
+                  type="number"
+                  value={classroomForm.capacity}
+                  onChange={(event) =>
+                    setClassroomForm((prev) => ({ ...prev, capacity: event.target.value }))
+                  }
+                />
+              </Field>
+              <div className="flex items-center justify-between rounded-lg border p-3 mt-6">
+                <div>
+                  <p className="font-medium text-sm">Aktif</p>
+                </div>
+                <Switch
+                  checked={classroomForm.is_active}
+                  onCheckedChange={(checked) =>
+                    setClassroomForm((prev) => ({ ...prev, is_active: checked }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetClassroomDialog}>Batal</Button>
+            <Button onClick={() => saveClassroom.mutate()} disabled={saveClassroom.isPending}>
+              {saveClassroom.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Simpan
             </Button>
           </DialogFooter>
