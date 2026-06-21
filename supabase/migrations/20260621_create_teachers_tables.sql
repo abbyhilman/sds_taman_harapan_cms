@@ -79,8 +79,8 @@ CREATE TABLE IF NOT EXISTS teachers (
 
 ALTER TABLE teachers ENABLE ROW LEVEL SECURITY;
 
--- Unique index for NIP (nullable-safe with partial index)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_teachers_nip_unique ON teachers(nip) WHERE nip IS NOT NULL AND nip != '';
+-- Unique constraint on NIP for ON CONFLICT to work
+ALTER TABLE teachers ADD CONSTRAINT teachers_nip_key UNIQUE (nip);
 
 -- Public read access
 CREATE POLICY "Anyone can view active teachers"
@@ -176,18 +176,18 @@ ON CONFLICT (nip) DO NOTHING;
 INSERT INTO teacher_subjects (teacher_id, subject_id)
 SELECT t.id, s.id FROM teachers t, subjects s
 WHERE t.nip = '198501152010011005' AND s.name = 'Matematika'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (teacher_id, subject_id) DO NOTHING;
 
 INSERT INTO teacher_subjects (teacher_id, subject_id)
 SELECT t.id, s.id FROM teachers t, subjects s
 WHERE t.nip = '199203222015032008' AND s.name IN ('Bahasa Indonesia', 'IPA')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (teacher_id, subject_id) DO NOTHING;
 
 -- Seed teacher_classrooms
 INSERT INTO teacher_classrooms (teacher_id, classroom_id)
 SELECT t.id, c.id FROM teachers t, classrooms c
 WHERE t.nip = '199203222015032008' AND c.name = '3A'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (teacher_id, classroom_id) DO NOTHING;
 
 -- Seed teacher_expertise
 INSERT INTO teacher_expertise (teacher_id, expertise)
