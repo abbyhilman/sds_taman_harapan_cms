@@ -128,13 +128,7 @@ export function Sidebar() {
   }, [pathname, visibleMenuItems]);
 
   const toggleMenu = (title: string) => {
-    setOpenMenu((prev) => {
-      const next = prev === title ? null : title;
-      if (next) {
-        prevSectionRef.current = title;
-      }
-      return next;
-    });
+    setOpenMenu((prev) => (prev === title ? null : title));
   };
 
   const handleSignOut = async () => {
