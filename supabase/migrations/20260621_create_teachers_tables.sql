@@ -79,6 +79,9 @@ CREATE TABLE IF NOT EXISTS teachers (
 
 ALTER TABLE teachers ENABLE ROW LEVEL SECURITY;
 
+-- Unique index for NIP (nullable-safe with partial index)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_teachers_nip_unique ON teachers(nip) WHERE nip IS NOT NULL AND nip != '';
+
 -- Public read access
 CREATE POLICY "Anyone can view active teachers"
   ON teachers FOR SELECT
@@ -164,11 +167,33 @@ CREATE POLICY "Admins can manage teacher expertise"
 -- ============================================
 
 -- Note: Using placeholder photos. Replace with actual uploaded photos.
-INSERT INTO teachers (photo_url, full_name, position, education, alma_mater, bio, display_order) VALUES
-  ('/images/guru-laki.png', 'Bpk. Ahmad Suryadi, S.Pd.', 'Kepala Sekolah', 'S1 Pendidikan Matematika', 'Universitas Negeri Jakarta', 'Berpengalaman lebih dari 15 tahun dalam dunia pendidikan dasar. Fokus pada pengembangan karakter siswa.', 1),
-  ('/images/guru-wanita.png', 'Ibu Siti Nurhaliza, S.Pd.', 'Wali Kelas', 'S1 Pendidikan Guru Sekolah Dasar', 'Universitas Indonesia', 'Passionate dalam mengajar dan membimbing siswa kelas awal. Spesialisasi dalam metode pembelajaran aktif.', 2),
-  ('/images/guru-laki.png', 'Bpk. Budi Santoso, S.Pd.', 'Guru Mata Pelajaran', 'S1 Pendidikan Bahasa Indonesia', 'Universitas PGRI Semarang', 'Ahli dalam literasi dan menulis kreatif untuk anak-anak.', 3),
-  ('/images/guru-wanita.png', 'Ibu Dewi Lestari, S.Pd.', 'Guru Mata Pelajaran', 'S1 Pendidikan Matematika', 'Universitas Negeri Surabaya', 'Mengajarkan matematika dengan pendekatan yang menyenangkan dan aplikatif.', 4),
-  ('/images/guru-laki.png', 'Bpk. Eko Prasetyo, S.Pd.', 'Guru Mata Pelajaran', 'S1 Pendidikan IPA', 'Universitas Negeri Malang', 'Spesialisasi dalam sains dan eksperimen praktis untuk siswa SD.', 5),
-  ('/images/guru-wanita.png', 'Ibu Ratna Sari, S.Pd.', 'Guru Ekstrakurikuler', 'S1 Seni Tari', 'Institut Seni Indonesia Yogyakarta', 'Mengajar tari tradisional dan modern. Aktif dalam komunitas seni lokal.', 6)
+INSERT INTO teachers (photo_url, full_name, nip, position, education, alma_mater, bio, display_order) VALUES
+  ('/images/guru-laki.png', 'Bpk. Ahmad Suryadi, S.Pd.', '198501152010011005', 'Kepala Sekolah', 'S1 Pendidikan Matematika', 'Universitas Negeri Jakarta', 'Berpengalaman lebih dari 15 tahun dalam dunia pendidikan dasar. Memimpin SDS Taman Harapan sejak 2018 dengan visi mewujudkan sekolah yang berkarakter dan berprestasi.', 1),
+  ('/images/guru-wanita.png', 'Ibu Siti Nurhaliza, S.Pd.', '199203222015032008', 'Wali Kelas', 'S1 Pendidikan Guru Sekolah Dasar', 'Universitas Indonesia', 'Passionate dalam mengajar dan membimbing siswa kelas awal. Spesialisasi dalam metode pembelajaran aktif dan kreatif. Mengajar Kelas 3A dengan pendekatan menyenangkan.', 2)
+ON CONFLICT (nip) DO NOTHING;
+
+-- Seed teacher_subjects (using subquery to find teacher IDs)
+INSERT INTO teacher_subjects (teacher_id, subject_id)
+SELECT t.id, s.id FROM teachers t, subjects s
+WHERE t.nip = '198501152010011005' AND s.name = 'Matematika'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO teacher_subjects (teacher_id, subject_id)
+SELECT t.id, s.id FROM teachers t, subjects s
+WHERE t.nip = '199203222015032008' AND s.name IN ('Bahasa Indonesia', 'IPA')
+ON CONFLICT DO NOTHING;
+
+-- Seed teacher_classrooms
+INSERT INTO teacher_classrooms (teacher_id, classroom_id)
+SELECT t.id, c.id FROM teachers t, classrooms c
+WHERE t.nip = '199203222015032008' AND c.name = '3A'
+ON CONFLICT DO NOTHING;
+
+-- Seed teacher_expertise
+INSERT INTO teacher_expertise (teacher_id, expertise)
+SELECT t.id, 'Kepemimpinan Pendidikan' FROM teachers t WHERE t.nip = '198501152010011005'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO teacher_expertise (teacher_id, expertise)
+SELECT t.id, exp FROM teachers t, (VALUES ('Pembelajaran Aktif'), ('Metode Kreatif'), ('Kelas Awal')) AS v(exp) WHERE t.nip = '199203222015032008'
 ON CONFLICT DO NOTHING;
