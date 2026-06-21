@@ -186,7 +186,7 @@ ON CONFLICT (teacher_id, subject_id) DO NOTHING;
 -- Seed teacher_classrooms
 INSERT INTO teacher_classrooms (teacher_id, classroom_id)
 SELECT t.id, c.id FROM teachers t, classrooms c
-WHERE t.nip = '199203222015032008' AND c.name = '3A'
+WHERE t.nip = '199203222015032008' AND c.display_name = '3A'
 ON CONFLICT (teacher_id, classroom_id) DO NOTHING;
 
 -- Seed teacher_expertise
