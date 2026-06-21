@@ -14,6 +14,8 @@ import {
   Menu,
   X,
   Settings,
+  Users,
+  Instagram,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
@@ -50,6 +52,16 @@ const menuItems: MenuItem[] = [
       { title: 'Berita', href: '/admin/content/news' },
       { title: 'Pendaftaran', href: '/admin/content/ppdb' },
     ],
+  },
+  {
+    title: 'Tim Pengajar',
+    icon: Users,
+    href: '/admin/teachers',
+  },
+  {
+    title: 'Sosial Media',
+    icon: Instagram,
+    href: '/admin/social-media',
   },
   {
     title: 'Akademik',
