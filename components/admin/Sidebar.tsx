@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
 interface MenuItem {
@@ -95,6 +95,7 @@ export function Sidebar() {
   const { signOut, user, profile } = useAuth();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const prevSectionRef = useRef<string | null>(null);
 
   const visibleMenuItems = menuItems.filter((item) => {
     if (item.hidden) return false;
@@ -110,18 +111,30 @@ export function Sidebar() {
     viewer: 'Viewer',
   };
 
-  // Auto-open menu based on current path
+  // Auto-open menu only when navigating to a different section
   useEffect(() => {
+    let currentSection: string | null = null;
     for (const item of visibleMenuItems) {
       if (item.submenu?.some(sub => pathname.startsWith(sub.href))) {
-        setOpenMenu(item.title);
+        currentSection = item.title;
         break;
       }
+    }
+
+    if (currentSection && currentSection !== prevSectionRef.current) {
+      prevSectionRef.current = currentSection;
+      setOpenMenu(currentSection);
     }
   }, [pathname, visibleMenuItems]);
 
   const toggleMenu = (title: string) => {
-    setOpenMenu((prev) => (prev === title ? null : title));
+    setOpenMenu((prev) => {
+      const next = prev === title ? null : title;
+      if (next) {
+        prevSectionRef.current = title;
+      }
+      return next;
+    });
   };
 
   const handleSignOut = async () => {
