@@ -110,8 +110,8 @@ export default function LoginPage() {
                 >
                   <LogOut className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                   <div>
-                    <p className="text-sm font-semibold text-amber-800">Sesi Berakhir</p>
-                    <p className="text-sm text-amber-700">Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.</p>
+                    <p className="text-sm font-semibold text-amber-800">Sesi Login Sudah Habis</p>
+                    <p className="text-sm text-amber-700">Sesi login Anda sudah kadaluarsa. Silakan login kembali untuk melanjutkan.</p>
                   </div>
                 </motion.div>
               )}

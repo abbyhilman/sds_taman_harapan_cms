@@ -26,6 +26,7 @@ interface MenuItem {
   href?: string;
   submenu?: { title: string; href: string }[];
   allowedRoles?: UserRole[];
+  hidden?: boolean;
 }
 
 const menuItems: MenuItem[] = [
@@ -53,6 +54,7 @@ const menuItems: MenuItem[] = [
   {
     title: 'Akademik',
     icon: GraduationCap,
+    hidden: true,
     submenu: [
       { title: 'Daftar Siswa', href: '/admin/students' },
       { title: 'Raport Digital', href: '/admin/report-cards' },
@@ -64,6 +66,7 @@ const menuItems: MenuItem[] = [
   {
     title: 'Keuangan',
     icon: TrendingUp,
+    hidden: true,
     href: '/admin/financial',
   },
   {
@@ -94,6 +97,7 @@ export function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const visibleMenuItems = menuItems.filter((item) => {
+    if (item.hidden) return false;
     if (!item.allowedRoles) return true;
     if (!profile) return false;
     return item.allowedRoles.includes(profile.role);
