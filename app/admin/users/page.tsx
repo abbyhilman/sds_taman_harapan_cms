@@ -146,8 +146,12 @@ export default function UserManagementPage() {
     queryKey: ["users"],
     queryFn: async () => {
       const res = await axios.get("/api/users");
+      if (!Array.isArray(res.data.data)) {
+        throw new Error("Format data pengguna tidak valid.");
+      }
       return res.data.data as Profile[];
     },
+    placeholderData: (previousData) => previousData,
   });
 
   const createUser = useMutation({
@@ -163,7 +167,14 @@ export default function UserManagementPage() {
       });
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      const createdUser = result.data as Profile | undefined;
+      if (createdUser) {
+        queryClient.setQueryData<Profile[]>(["users"], (currentUsers) => {
+          const users = currentUsers ?? [];
+          return [createdUser, ...users.filter((user) => user.id !== createdUser.id)];
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast({ title: "Pengguna berhasil dibuat" });
       setCreateForm(emptyCreateForm);
@@ -325,7 +336,7 @@ export default function UserManagementPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usersQuery.isFetching ? (
+                    {usersQuery.isFetching && users.length === 0 ? (
                       <LoadingRow colSpan={6} />
                     ) : users.length ? (
                       users.map((user) => (
