@@ -41,7 +41,12 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 2rem;
-      font-size: 3rem;
+    }
+
+    .cover-logo img {
+      width: 86px;
+      height: 86px;
+      object-fit: contain;
     }
 
     .cover-title {
@@ -350,12 +355,14 @@
 <body>
   <!-- Cover Page -->
   <div class="cover-page">
-    <div class="cover-logo">🏫</div>
+    <div class="cover-logo">
+      <img src="../public/logo_tamhar.png" alt="Logo SDS Taman Harapan">
+    </div>
     <h1 class="cover-title">Panduan Penggunaan</h1>
     <p class="cover-subtitle">Content Management System (CMS)</p>
     <p class="cover-school">SDS Taman Harapan</p>
     <div class="cover-meta">
-      <p><strong>Versi Dokumen:</strong> 1.1</p>
+      <p><strong>Versi Dokumen:</strong> 1.2</p>
       <p><strong>Tanggal:</strong> Juni 2026</p>
       <p><strong>Ditujukan untuk:</strong> Administrator dan Staff Sekolah</p>
     </div>
@@ -369,11 +376,11 @@
       <li><a href="#login">2. Cara Login ke Admin Panel</a> <span>4</span></li>
       <li><a href="#dashboard">3. Dashboard</a> <span>5</span></li>
       <li><a href="#konten-website">4. Manajemen Konten Website</a> <span>6</span></li>
-      <li><a href="#akademik">5. Manajemen Akademik</a> <span>10</span></li>
-      <li><a href="#keuangan">6. Manajemen Keuangan</a> <span>14</span></li>
-      <li><a href="#galeri">7. Galeri Media</a> <span>16</span></li>
-      <li><a href="#pengaturan">8. Pengaturan</a> <span>17</span></li>
-      <li><a href="#tips">9. Tips dan Praktik Terbaik</a> <span>19</span></li>
+      <li><a href="#tim-pengajar">5. Tim Pengajar</a> <span>10</span></li>
+      <li><a href="#sosial-media">6. Sosial Media</a> <span>11</span></li>
+      <li><a href="#galeri">7. Galeri Media</a> <span>12</span></li>
+      <li><a href="#pengaturan">8. Pengaturan</a> <span>13</span></li>
+      <li><a href="#tips">9. Tips dan Praktik Terbaik</a> <span>15</span></li>
     </ul>
   </div>
 
@@ -387,19 +394,19 @@
       <h2>Fitur Utama</h2>
       <ul>
         <li><strong>Manajemen Konten Website:</strong> Kelola halaman beranda, tentang kami, program, berita, dan pendaftaran siswa baru (PPDB)</li>
-        <li><strong>Manajemen Akademik:</strong> Data siswa, rapor digital, mata pelajaran, dan tahun akademik</li>
-        <li><strong>Manajemen Keuangan:</strong> Invoice SPP, proyeksi cash flow, dan analisis pembayaran</li>
+        <li><strong>Tim Pengajar:</strong> Kelola profil guru, jabatan, mata pelajaran, wali kelas, dan keahlian</li>
+        <li><strong>Sosial Media:</strong> Kelola tautan Instagram dan TikTok yang tampil di website publik</li>
         <li><strong>Galeri Media:</strong> Foto, video, dan dokumentasi kegiatan sekolah</li>
         <li><strong>Pengaturan:</strong> Profil sekolah dan manajemen pengguna</li>
       </ul>
 
       <h2>Level Akses Pengguna</h2>
       <div class="feature-card">
-        <h4>🔐 Peran dan Hak Akses</h4>
+        <h4>Peran dan Hak Akses</h4>
         <ul>
           <li><strong>Super Admin:</strong> Akses penuh ke semua fitur termasuk manajemen pengguna</li>
           <li><strong>Admin:</strong> Akses ke semua fitur operasional kecuali beberapa pengaturan sensitif</li>
-          <li><strong>Editor:</strong> Dapat mengedit konten website dan data akademik</li>
+          <li><strong>Editor:</strong> Dapat mengedit konten website sesuai hak akses yang diberikan</li>
           <li><strong>Viewer:</strong> Hanya dapat melihat data tanpa kemampuan edit</li>
         </ul>
       </div>
@@ -424,17 +431,17 @@
         <p class="screenshot-caption">Gambar: Halaman Login Admin Panel CMS</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen Halaman Login:</h5>
+        <h5>Petunjuk Elemen Halaman Login:</h5>
         <ol>
-          <li><strong>Logo Sekolah</strong> — Logo SDS Taman Harapan di bagian atas form</li>
-          <li><strong>Field Email</strong> — Masukkan email admin Anda (contoh: admin@sdstamanharapan.sch.id)</li>
-          <li><strong>Field Password</strong> — Masukkan password akun Anda</li>
-          <li><strong>Tombol "Masuk"</strong> — Klik untuk login ke sistem</li>
+          <li><strong>Logo Sekolah</strong> - Logo SDS Taman Harapan di bagian atas form</li>
+          <li><strong>Field Email</strong> - Masukkan email admin Anda (contoh: admin@sdstamanharapan.sch.id)</li>
+          <li><strong>Field Password</strong> - Masukkan password akun Anda</li>
+          <li><strong>Tombol "Masuk"</strong> - Klik untuk login ke sistem</li>
         </ol>
       </div>
 
       <div class="info-box warning">
-        <p class="info-box-title">⚠️ Perhatian</p>
+        <p class="info-box-title">Perhatian</p>
         <p>Jika akun Anda dinonaktifkan, Anda akan melihat pesan "Akun Dinonaktifkan". Hubungi administrator untuk mengaktifkan kembali akun Anda.</p>
       </div>
 
@@ -455,23 +462,23 @@
         <p class="screenshot-caption">Gambar: Halaman Dashboard Admin Panel</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen Dashboard:</h5>
+        <h5>Petunjuk Elemen Dashboard:</h5>
         <ol>
-          <li><strong>Sidebar (kiri)</strong> — Menu navigasi utama: Dashboard, Konten Website, Akademik, Keuangan, Galeri Media, Pengaturan. Klik untuk membuka masing-masing bagian</li>
-          <li><strong>Kartu Statistik (atas)</strong> — Menampilkan jumlah Pendaftar PPDB, Data Siswa, dan Konten & Galeri secara ringkas</li>
-          <li><strong>Status PPDB (kanan)</strong> — Chart lingkaran komposisi pendaftar yang diterima vs dalam proses</li>
-          <li><strong>Aktivitas Konten (bawah)</strong> — Jumlah Program, Fasilitas, Prestasi, Berita, Foto, dan Video</li>
-          <li><strong>Info Pengguna (bawah sidebar)</strong> — Menampilkan nama, email, dan peran Anda. Tombol "Keluar" untuk logout</li>
+          <li><strong>Sidebar (kiri)</strong> - Menu navigasi utama: Dashboard, Konten Website, Tim Pengajar, Sosial Media, Galeri Media, dan Pengaturan. Klik untuk membuka masing-masing bagian</li>
+          <li><strong>Kartu Statistik (atas)</strong> - Menampilkan jumlah Pendaftar PPDB, Data Siswa, dan Konten & Galeri secara ringkas</li>
+          <li><strong>Status PPDB (kanan)</strong> - Chart lingkaran komposisi pendaftar yang diterima vs dalam proses</li>
+          <li><strong>Aktivitas Konten (bawah)</strong> - Jumlah Program, Fasilitas, Prestasi, Berita, Foto, dan Video</li>
+          <li><strong>Info Pengguna (bawah sidebar)</strong> - Menampilkan nama, email, dan peran Anda. Tombol "Keluar" untuk logout</li>
         </ol>
       </div>
 
       <h2>Informasi yang Ditampilkan</h2>
       <div class="feature-card">
-        <h4>📊 Kartu Statistik</h4>
+        <h4>Kartu Statistik</h4>
         <ul>
           <li><strong>Total Siswa:</strong> Jumlah siswa aktif saat ini</li>
           <li><strong>Pendaftaran Baru:</strong> Jumlah pendaftaran PPDB yang masuk</li>
-          <li><strong>Pembayaran SPP:</strong> Statistik pembayaran bulan ini</li>
+          <li><strong>Konten Aktif:</strong> Ringkasan konten website dan galeri yang sudah tersedia</li>
           <li><strong>Berita Terpublikasi:</strong> Jumlah berita yang sudah dipublikasikan</li>
         </ul>
       </div>
@@ -481,14 +488,14 @@
       <ul>
         <li>Dashboard</li>
         <li>Konten Website (dengan submenu)</li>
-        <li>Akademik (dengan submenu)</li>
-        <li>Keuangan</li>
+        <li>Tim Pengajar</li>
+        <li>Sosial Media</li>
         <li>Galeri Media (dengan submenu)</li>
         <li>Pengaturan (dengan submenu)</li>
       </ul>
 
       <div class="info-box success">
-        <p class="info-box-title">💡 Tips</p>
+        <p class="info-box-title">Tips</p>
         <p>Di bagian bawah sidebar, Anda dapat melihat nama pengguna dan peran Anda saat ini.</p>
       </div>
     </section>
@@ -506,11 +513,11 @@
         <p class="screenshot-caption">Gambar: Halaman Pengaturan Konten Beranda</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Sidebar → Konten Website → Beranda</strong> — Klik untuk membuka halaman pengaturan konten beranda</li>
-          <li><strong>Form Editor</strong> — Edit teks, gambar, dan pengaturan hero section, sambutan, dan CTA</li>
-          <li><strong>Tombol "Simpan"</strong> — Klik untuk menyimpan perubahan konten</li>
+          <li><strong>Sidebar > Konten Website > Beranda</strong> - Klik untuk membuka halaman pengaturan konten beranda</li>
+          <li><strong>Form Editor</strong> - Edit teks, gambar, dan pengaturan hero section, sambutan, dan CTA</li>
+          <li><strong>Tombol "Simpan"</strong> - Klik untuk menyimpan perubahan konten</li>
         </ol>
       </div>
 
@@ -524,7 +531,7 @@
 
       <h3>Cara Mengedit:</h3>
       <ol>
-        <li>Klik menu <strong>Konten Website → Beranda</strong></li>
+        <li>Klik menu <strong>Konten Website > Beranda</strong></li>
         <li>Klik tombol <strong>"Edit"</strong> pada bagian yang ingin diubah</li>
         <li>Ubah teks, gambar, atau pengaturan lainnya</li>
         <li>Klik <strong>"Simpan"</strong> untuk menyimpan perubahan</li>
@@ -538,12 +545,12 @@
         <p class="screenshot-caption">Gambar: Halaman Pengaturan Konten Tentang Kami</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Sidebar → Konten Website → Tentang Kami</strong> — Klik untuk membuka halaman pengaturan konten tentang</li>
-          <li><strong>Tab Sections (Sejarah / Visi-Misi / Struktur / Tim)</strong> — Klik untuk berpindah antar bagian halaman tentang</li>
-          <li><strong>Form Editor</strong> — Edit teks, gambar, dan data untuk setiap bagian</li>
-          <li><strong>Tombol "Simpan"</strong> — Klik untuk menyimpan perubahan konten</li>
+          <li><strong>Sidebar > Konten Website > Tentang Kami</strong> - Klik untuk membuka halaman pengaturan konten tentang</li>
+          <li><strong>Tab Sections (Sejarah / Visi-Misi / Struktur / Tim)</strong> - Klik untuk berpindah antar bagian halaman tentang</li>
+          <li><strong>Form Editor</strong> - Edit teks, gambar, dan data untuk setiap bagian</li>
+          <li><strong>Tombol "Simpan"</strong> - Klik untuk menyimpan perubahan konten</li>
         </ol>
       </div>
 
@@ -563,19 +570,19 @@
         <p class="screenshot-caption">Gambar: Halaman Manajemen Program Unggulan</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Sidebar → Konten Website → Program Unggulan</strong> — Klik untuk membuka halaman program</li>
-          <li><strong>Tombol "Tambah Program"</strong> — Klik untuk membuat program unggulan baru</li>
-          <li><strong>Kartu Program</strong> — Daftar program dengan icon, nama, dan deskripsi singkat</li>
-          <li><strong>Tombol Edit (ikon pensil)</strong> — Klik untuk mengubah detail program</li>
-          <li><strong>Tombol Hapus (ikon tong sampah)</strong> — Klik untuk menghapus program</li>
+          <li><strong>Sidebar > Konten Website > Program Unggulan</strong> - Klik untuk membuka halaman program</li>
+          <li><strong>Tombol "Tambah Program"</strong> - Klik untuk membuat program unggulan baru</li>
+          <li><strong>Kartu Program</strong> - Daftar program dengan icon, nama, dan deskripsi singkat</li>
+          <li><strong>Tombol Edit (ikon pensil)</strong> - Klik untuk mengubah detail program</li>
+          <li><strong>Tombol Hapus (ikon tong sampah)</strong> - Klik untuk menghapus program</li>
         </ol>
       </div>
 
       <h3>Cara Menambah Program:</h3>
       <ol>
-        <li>Klik menu <strong>Konten Website → Program Unggulan</strong></li>
+        <li>Klik menu <strong>Konten Website > Program Unggulan</strong></li>
         <li>Klik tombol <strong>"Tambah Program"</strong></li>
         <li>Isi form:
           <ul>
@@ -597,18 +604,18 @@
         <p class="screenshot-caption">Gambar: Halaman Manajemen Berita</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Tombol "Tambah Berita"</strong> — Klik untuk membuat berita baru</li>
-          <li><strong>Daftar Berita</strong> — Tabel berisi judul, kategori, status (Draft/Published), dan tanggal</li>
-          <li><strong>Tombol Edit (ikon pensil)</strong> — Klik untuk mengubah berita yang sudah ada</li>
-          <li><strong>Tombol Hapus (ikon tong sampah)</strong> — Klik untuk menghapus berita</li>
+          <li><strong>Tombol "Tambah Berita"</strong> - Klik untuk membuat berita baru</li>
+          <li><strong>Daftar Berita</strong> - Tabel berisi judul, kategori, status (Draft/Published), dan tanggal</li>
+          <li><strong>Tombol Edit (ikon pensil)</strong> - Klik untuk mengubah berita yang sudah ada</li>
+          <li><strong>Tombol Hapus (ikon tong sampah)</strong> - Klik untuk menghapus berita</li>
         </ol>
       </div>
 
       <h3>Cara Membuat Berita:</h3>
       <ol>
-        <li>Klik menu <strong>Konten Website → Berita</strong></li>
+        <li>Klik menu <strong>Konten Website > Berita</strong></li>
         <li>Klik tombol <strong>"Tambah Berita"</strong></li>
         <li>Isi form:
           <ul>
@@ -625,7 +632,7 @@
       </ol>
 
       <div class="info-box">
-        <p class="info-box-title">ℹ️ Catatan</p>
+        <p class="info-box-title">Catatan Catatan</p>
         <p>Berita dengan status "Draft" tidak akan tampil di website publik. Ubah status menjadi "Published" untuk mempublikasikan.</p>
       </div>
 
@@ -637,13 +644,13 @@
         <p class="screenshot-caption">Gambar: Halaman Manajemen PPDB (Pendaftaran Siswa Baru)</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Filter Status</strong> — Pilih untuk melihat pendaftar berdasarkan status: Semua, Pending, Diterima, Ditolak</li>
-          <li><strong>Tabel Pendaftar</strong> — Daftar semua pendaftar dengan nama, NISN, dan status</li>
-          <li><strong>Tombol Detail</strong> — Klik untuk melihat data lengkap pendaftar</li>
-          <li><strong>Ubah Status</strong> — Terima atau tolak pendaftaran dari halaman detail</li>
-          <li><strong>Export Data</strong> — Download data pendaftar dalam format Excel</li>
+          <li><strong>Filter Status</strong> - Pilih untuk melihat pendaftar berdasarkan status: Semua, Pending, Diterima, Ditolak</li>
+          <li><strong>Tabel Pendaftar</strong> - Daftar semua pendaftar dengan nama, NISN, dan status</li>
+          <li><strong>Tombol Detail</strong> - Klik untuk melihat data lengkap pendaftar</li>
+          <li><strong>Ubah Status</strong> - Terima atau tolak pendaftaran dari halaman detail</li>
+          <li><strong>Export Data</strong> - Download data pendaftar dalam format Excel</li>
         </ol>
       </div>
 
@@ -666,361 +673,94 @@
       </ol>
     </section>
 
-    <!-- Section 5: Akademik -->
-    <section id="akademik" class="section">
-      <h1>5. Manajemen Akademik</h1>
-      <p>Bagian ini mengelola data siswa, rapor, dan referensi akademik lainnya.</p>
+    <!-- Section 5: Tim Pengajar -->
+    <section id="tim-pengajar" class="section">
+      <h1>5. Tim Pengajar</h1>
+      <p>Menu Tim Pengajar digunakan untuk mengelola profil guru dan staf pengajar yang ditampilkan di website publik sekolah.</p>
 
-      <h2>5.1 Daftar Siswa</h2>
-      <p>Kelola data seluruh siswa aktif di sekolah.</p>
-
+      <h2>5.1 Data yang Dikelola</h2>
       <div class="screenshot-wrapper">
-        <img src="screenshots/08-students.png" alt="Manajemen Siswa">
-        <p class="screenshot-caption">Gambar: Halaman Manajemen Siswa</p>
+        <img src="screenshots/08-teachers.png" alt="Tim Pengajar">
+        <p class="screenshot-caption">Gambar: Halaman Manajemen Tim Pengajar</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Kartu Statistik (atas)</strong> — Total Siswa, Siswa Aktif, Laki-laki, dan Perempuan</li>
-          <li><strong>Tombol "Import dari PPDB"</strong> — Klik untuk import data siswa yang diterima dari PPDB</li>
-          <li><strong>Tombol "+ Tambah Siswa"</strong> — Klik untuk menambah siswa baru secara manual</li>
-          <li><strong>Filter Kelas (dropdown)</strong> — Pilih kelas untuk memfilter daftar siswa</li>
-          <li><strong>Field Pencarian</strong> — Ketik nama atau NISN untuk mencari siswa</li>
-          <li><strong>Tabel Siswa</strong> — Daftar siswa dengan avatar, nama, NISN, kelas, jenis kelamin, orang tua, kontak, dan status</li>
-          <li><strong>Tombol Aksi (⋯)</strong> — Klik titik tiga di setiap baris untuk Edit atau Hapus siswa</li>
+          <li><strong>Tombol Tambah Pengajar</strong> - Klik untuk menambahkan profil guru atau staf pengajar baru</li>
+          <li><strong>Daftar Pengajar</strong> - Tabel berisi foto, nama, jabatan, mata pelajaran, kelas, dan status aktif</li>
+          <li><strong>Pencarian</strong> - Gunakan untuk menemukan data pengajar berdasarkan nama atau informasi terkait</li>
+          <li><strong>Tombol Edit dan Hapus</strong> - Ubah detail profil atau hapus data yang sudah tidak digunakan</li>
         </ol>
       </div>
-
-      <h3>Fitur:</h3>
       <ul>
-        <li><strong>Lihat Daftar:</strong> Tabel siswa dengan filter kelas dan pencarian</li>
-        <li><strong>Tambah Siswa:</strong> Input data siswa baru secara manual</li>
-        <li><strong>Import dari PPDB:</strong> Import siswa yang sudah diterima dari PPDB</li>
-        <li><strong>Edit Siswa:</strong> Ubah data siswa yang sudah ada</li>
-        <li><strong>Nonaktifkan Siswa:</strong> Tandai siswa sebagai lulus atau pindah</li>
+        <li><strong>Nama Lengkap:</strong> Nama guru atau staf pengajar.</li>
+        <li><strong>Jabatan:</strong> Kepala Sekolah, Wali Kelas, Guru Mata Pelajaran, Guru Pendamping, dan posisi lain yang tersedia.</li>
+        <li><strong>Foto Profil:</strong> Foto guru yang akan tampil di halaman Tim Pengajar.</li>
+        <li><strong>Pendidikan dan Asal Sekolah:</strong> Informasi latar belakang pendidikan.</li>
+        <li><strong>Mata Pelajaran, Wali Kelas, dan Keahlian:</strong> Informasi relasi yang membantu pengunjung memahami peran pengajar.</li>
+        <li><strong>Status Aktif:</strong> Menentukan apakah profil ditampilkan di website publik.</li>
       </ul>
 
-      <h3>Cara Menambah Siswa Manual:</h3>
-      <ol>
-        <li>Klik menu <strong>Akademik → Daftar Siswa</strong></li>
-        <li>Klik tombol <strong>"Tambah Siswa"</strong></li>
-        <li>Isi data:
-          <ul>
-            <li>Nama lengkap</li>
-            <li>NISN (Nomor Induk Siswa Nasional)</li>
-            <li>Kelas saat ini</li>
-            <li>Jenis kelamin</li>
-            <li>Tanggal lahir</li>
-            <li>Alamat</li>
-            <li>Nama orang tua/wali</li>
-            <li>Nomor telepon orang tua</li>
-          </ul>
-        </li>
-        <li>Klik <strong>"Simpan"</strong></li>
-      </ol>
-
-      <h3>Cara Import dari PPDB:</h3>
-      <ol>
-        <li>Klik menu <strong>Akademik → Daftar Siswa</strong></li>
-        <li>Klik tombol <strong>"Import dari PPDB"</strong></li>
-        <li>Pilih siswa dari daftar pendaftar yang sudah diterima</li>
-        <li>Verifikasi dan lengkapi data jika diperlukan</li>
-        <li>Klik <strong>"Import"</strong></li>
-      </ol>
-
-      <h2>5.2 Rapor Digital</h2>
-      <p>Buat dan kelola rapor siswa dalam format digital dengan AI assistance.</p>
-
-      <div class="screenshot-wrapper">
-        <img src="screenshots/09-report-cards.png" alt="Rapor Digital">
-        <p class="screenshot-caption">Gambar: Halaman Daftar Rapor Digital Siswa</p>
-      </div>
-      <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
-        <ol>
-          <li><strong>Tombol "Buat Rapor"</strong> — Klik untuk membuat rapor baru untuk seorang siswa</li>
-          <li><strong>Filter Tahun Akademik & Semester</strong> — Pilih untuk memfilter daftar rapor</li>
-          <li><strong>Daftar Rapor</strong> — Tabel berisi nama siswa, kelas, semester, dan status (Draft/Final)</li>
-          <li><strong>Tombol "Edit"</strong> — Klik untuk membuka form pengisian nilai rapor</li>
-          <li><strong>Tombol "Preview"</strong> — Klik untuk melihat preview rapor dalam format PDF</li>
-          <li><strong>Tombol "Hapus"</strong> — Klik untuk menghapus rapor yang masih berstatus Draft</li>
-        </ol>
-      </div>
-
-      <h3>Prasyarat Membuat Rapor:</h3>
-      <div class="info-box warning">
-        <p class="info-box-title">⚠️ Pastikan Sudah Ada:</p>
-        <ul>
-          <li>Data siswa yang aktif</li>
-          <li>Mata pelajaran yang sudah dikonfigurasi (di Master Data)</li>
-          <li>Template rapor yang aktif (di Template Rapor)</li>
-          <li>Tahun akademik yang aktif (di Master Data)</li>
-        </ul>
-      </div>
-
-      <h3>Cara Membuat Rapor:</h3>
-      <ol>
-        <li>Klik menu <strong>Akademik → Rapor Digital</strong></li>
-        <li>Klik tombol <strong>"Buat Rapor"</strong></li>
-        <li>Pilih:
-          <ul>
-            <li>Tahun akademik</li>
-            <li>Semester (Ganjil/Genap)</li>
-            <li>Kelas</li>
-            <li>Siswa</li>
-          </ul>
-        </li>
-        <li>Klik <strong>"Buat"</strong></li>
-      </ol>
-
-      <h3>Cara Mengisi Nilai:</h3>
-      <ol>
-        <li>Di daftar rapor, klik tombol <strong>"Edit"</strong> pada rapor yang ingin diisi</li>
-        <li>Isi nilai untuk setiap mata pelajaran (skala 0-100)</li>
-        <li>Tambahkan catatan per mata pelajaran jika diperlukan</li>
-        <li>Klik <strong>"Simpan"</strong> secara berkala</li>
-      </ol>
-
-      <h3>Fitur AI (Kecerdasan Buatan):</h3>
-      <div class="feature-card">
-        <h4>✨ AI-Powered Features</h4>
-        <ul>
-          <li><strong>Generate Catatan Wali Kelas:</strong> AI akan membuat catatan apresiatif berdasarkan nilai siswa</li>
-          <li><strong>Analisa Fokus Belajar:</strong> AI mengidentifikasi mata pelajaran yang perlu perhatian khusus</li>
-          <li><strong>Rekomendasi Strategi:</strong> Saran konkret untuk peningkatan prestasi</li>
-        </ul>
-        <p style="margin-top: 0.5rem;"><strong>Cara Menggunakan:</strong> Setelah mengisi minimal 50% nilai, klik tombol "Generate AI" di bagian Catatan Wali Kelas.</p>
-      </div>
-
-      <h3>Preview dan Finalisasi:</h3>
-      <ol>
-        <li>Setelah semua nilai terisi, klik tombol <strong>"Preview"</strong></li>
-        <li>Lihat preview rapor dalam format PDF</li>
-        <li>Di sidebar kanan, Anda dapat:
-          <ul>
-            <li>Melihat statistik nilai (rata-rata, mata pelajaran terbaik/terlemah)</li>
-            <li>Melihat analisa AI untuk fokus belajar</li>
-            <li>Mengedit catatan wali kelas</li>
-          </ul>
-        </li>
-        <li>Jika sudah yakin, klik <strong>"Finalisasi"</strong> untuk mengunci rapor</li>
-      </ol>
-
-      <div class="info-box warning">
-        <p class="info-box-title">⚠️ Peringatan</p>
-        <p>Setelah difinalisasi, rapor tidak dapat diedit lagi. Pastikan semua data sudah benar sebelum finalisasi.</p>
-      </div>
-
-      <h2>5.3 Master Data</h2>
-      <p>Kelola data referensi yang digunakan di seluruh sistem.</p>
-
-      <div class="screenshot-wrapper">
-        <img src="screenshots/10-master-data.png" alt="Master Data">
-        <p class="screenshot-caption">Gambar: Halaman Master Data — Tahun Akademik, Mata Pelajaran, Ekstrakurikuler, Sub-Kelas</p>
-      </div>
-      <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
-        <ol>
-          <li><strong>Tab "Tahun Akademik"</strong> — Klik untuk mengelola tahun akademik (aktif/nonaktif)</li>
-          <li><strong>Tab "Mata Pelajaran"</strong> — Klik untuk menambah/edit mata pelajaran dan urutannya</li>
-          <li><strong>Tab "Ekstrakurikuler"</strong> — Klik untuk mengelola kegiatan ekstrakurikuler</li>
-          <li><strong>Tab "Sub-Kelas"</strong> — Klik untuk mengelola pembagian kelas (contoh: 1A, 2B, atau Kelas 1 tanpa seksi)</li>
-          <li><strong>Tombol Tambah (+)</strong> — Tersedia di setiap tab untuk menambah data baru</li>
-        </ol>
-      </div>
-
-      <h3>Tab yang Tersedia:</h3>
-
-      <h4>A. Tahun Akademik</h4>
-      <ul>
-        <li>Tambah tahun akademik baru (contoh: "2025/2026")</li>
-        <li>Set tahun akademik aktif</li>
-        <li>Atur tanggal mulai dan selesai</li>
-      </ul>
-
-      <h4>B. Mata Pelajaran</h4>
-      <ul>
-        <li>Tambah mata pelajaran baru</li>
-        <li>Atur kode mata pelajaran</li>
-        <li>Kategorikan (Wajib, Pilihan, Muatan Lokal)</li>
-        <li>Atur urutan tampilan di rapor</li>
-      </ul>
-
-      <h4>C. Ekstrakurikuler</h4>
-      <ul>
-        <li>Tambah kegiatan ekstrakurikuler</li>
-        <li>Atur nama dan deskripsi</li>
-        <li>Atur urutan tampilan</li>
-      </ul>
-
-      <h4>D. Sub-Kelas</h4>
-      <p>Kelola pembagian kelas per tingkat. Setiap kelas dapat memiliki seksi (misalnya 1A, 1B) atau tanpa seksi untuk sekolah dengan satu kelas per tingkat.</p>
-      <ul>
-        <li><strong>Tambah Sub-Kelas:</strong> Klik tombol "Tambah Kelas" di pojok kanan atas tab Sub-Kelas</li>
-        <li><strong>Field yang tersedia:</strong>
-          <ul>
-            <li>Nama Kelas (wajib) — contoh: "Kelas 1A" atau "Kelas 1"</li>
-            <li>Tingkat (wajib) — pilih dari Kelas 1 sampai Kelas 6</li>
-            <li>Seksi (opsional) — huruf A/B/C/D, atau "Tidak Ada" jika hanya satu kelas per tingkat</li>
-            <li>Tahun Ajaran — hubungkan ke tahun ajaran yang aktif</li>
-            <li>Wali Kelas — nama wali kelas (opsional)</li>
-            <li>Kapasitas — jumlah maksimal siswa per kelas</li>
-            <li>Status Aktif — nonaktifkan kelas yang sudah tidak digunakan</li>
-          </ul>
-        </li>
-        <li><strong>Edit/Hapus:</strong> Klik ikon tiga titik pada baris kelas untuk mengedit atau menghapus</li>
-      </ul>
-
-      <div class="info-box success">
-        <p class="info-box-title">💡 Tips</p>
-        <p>Sub-kelas yang dibuat di sini akan otomatis muncul sebagai pilihan di form tambah/edit siswa dan filter kelas di halaman Daftar Siswa. Pastikan setiap siswa di-assign ke sub-kelas yang benar.</p>
-      </div>
-
-      <h2>5.4 Template Rapor</h2>
-      <p>Kelola template rapor yang menentukan layout dan komponen rapor PDF.</p>
-
-      <h3>Fitur:</h3>
-      <ul>
-        <li><strong>Buat Template:</strong> Upload file template rapor</li>
-        <li><strong>Konfigurasi:</strong> Atur komponen yang ditampilkan</li>
-        <li><strong>Preview:</strong> Lihat hasil template</li>
-        <li><strong>Aktifkan:</strong> Set template sebagai template aktif</li>
-      </ul>
-
-      <div class="info-box">
-        <p class="info-box-title">ℹ️ Catatan</p>
-        <p>Hanya satu template yang dapat aktif pada satu waktu. Template aktif akan digunakan untuk semua rapor baru yang dibuat.</p>
-      </div>
-
-      <h2>5.5 Ranking Siswa</h2>
-      <p>Lihat peringkat siswa berdasarkan rata-rata nilai rapor per kelas, semester, dan tahun ajaran. Ranking dihitung secara otomatis dari nilai rapor yang sudah diinput.</p>
-
-      <h3>Mengakses Ranking Siswa:</h3>
+      <h2>5.2 Cara Mengelola Tim Pengajar</h2>
       <ol class="steps">
-        <li>Buka menu <strong>Akademik</strong> di sidebar, lalu klik <strong>Ranking Siswa</strong></li>
-        <li>Halaman ranking akan menampilkan daftar peringkat siswa yang dikelompokkan per kelas</li>
+        <li>Klik menu <strong>Tim Pengajar</strong> di sidebar admin.</li>
+        <li>Klik tombol tambah untuk membuat profil pengajar baru, atau pilih data yang sudah ada untuk diedit.</li>
+        <li>Lengkapi informasi utama seperti nama, jabatan, foto, pendidikan, dan bio singkat.</li>
+        <li>Tambahkan relasi mata pelajaran, wali kelas, atau keahlian jika tersedia.</li>
+        <li>Aktifkan status profil jika data sudah siap ditampilkan di website publik.</li>
+        <li>Klik <strong>Simpan</strong> untuk menyimpan perubahan.</li>
       </ol>
-
-      <div class="screenshot-wrapper">
-        <img src="screenshots/15-ranking.png" alt="Ranking Siswa">
-        <p class="screenshot-caption">Gambar: Halaman Ranking Siswa — Filter, Tabel Peringkat, dan Unduh PDF</p>
-      </div>
-
-      <h3>Fitur Filter:</h3>
-      <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
-        <ol>
-          <li><strong>Tombol Semester</strong> — Toggle berbentuk pill untuk memilih Semua, Ganjil, atau Genap</li>
-          <li><strong>Filter Kelas</strong> — Dropdown untuk memilih kelas tertentu atau semua kelas</li>
-          <li><strong>Filter Tahun Ajaran</strong> — Dropdown untuk memilih tahun ajaran</li>
-          <li><strong>Kolom Pencarian</strong> — Cari siswa berdasarkan nama secara real-time</li>
-          <li><strong>Chip Filter Aktif</strong> — Menampilkan filter yang sedang aktif, klik untuk menghapus filter</li>
-        </ol>
-      </div>
-
-      <h3>Tampilan Ranking:</h3>
-      <ul>
-        <li><strong>Kartu Statistik:</strong> Total siswa ter-rank, jumlah kelas aktif, dan nilai tertinggi</li>
-        <li><strong>Podium Juara:</strong> Saat memfilter satu kelas tertentu, tiga siswa terbaik ditampilkan dalam format podium (Juara 1, 2, dan 3)</li>
-        <li><strong>Tabel Ranking:</strong> Menampilkan posisi, nama siswa, NISN, rata-rata nilai dengan progress bar, dan posisi dari total siswa</li>
-        <li><strong>Indikator Visual:</strong> Warna skor berubah berdasarkan nilai — hijau (90+), biru (80+), kuning (70+), merah (di bawah 70)</li>
-        <li><strong>Unduh PDF:</strong> Tombol "Unduh PDF" di setiap kartu kelas untuk mengunduh ranking kelas tersebut dalam format PDF</li>
-        <li><strong>Paginasi:</strong> Jika jumlah siswa lebih dari 10 per kelas, navigasi halaman akan muncul di bagian bawah tabel</li>
-      </ul>
 
       <div class="info-box success">
-        <p class="info-box-title">💡 Tips</p>
-        <p>Ranking juga muncul di halaman Preview Rapor siswa. Pada kartu statistik di sebelah kanan, Anda dapat melihat badge ranking siswa tersebut di kelasnya. Ini memudahkan wali kelas untuk melihat posisi siswa tanpa harus membuka halaman Ranking Siswa secara terpisah.</p>
-      </div>
-
-      <div class="info-box warning">
-        <p class="info-box-title">⚠️ Perhatian</p>
-        <p>Ranking dihitung berdasarkan rata-rata dari nilai pengetahuan dan keterampilan semua mata pelajaran. Pastikan semua nilai sudah diinput dengan benar sebelum menggunakan ranking sebagai acuan. Data ranking akan otomatis terupdate setiap kali nilai rapor diubah.</p>
+        <p class="info-box-title">Tips</p>
+        <p>Gunakan foto dengan rasio persegi dan kualitas yang jelas agar tampilan kartu pengajar terlihat rapi di halaman publik.</p>
       </div>
     </section>
 
-    <!-- Section 6: Keuangan -->
-    <section id="keuangan" class="section">
-      <h1>6. Manajemen Keuangan</h1>
-      <p>Kelola invoice SPP dan analisis proyeksi cash flow sekolah.</p>
+    <!-- Section 6: Sosial Media -->
+    <section id="sosial-media" class="section">
+      <h1>6. Sosial Media</h1>
+      <p>Menu Sosial Media digunakan untuk mengelola postingan Instagram dan TikTok yang ditampilkan di bagian galeri atau dokumentasi kegiatan sekolah pada website publik.</p>
 
+      <h2>6.1 Data yang Dikelola</h2>
       <div class="screenshot-wrapper">
-        <img src="screenshots/11-financial.png" alt="Financial Dashboard">
-        <p class="screenshot-caption">Gambar: Halaman Financial Dashboard — Proyeksi Cash Flow</p>
+        <img src="screenshots/09-social-media.png" alt="Sosial Media">
+        <p class="screenshot-caption">Gambar: Halaman Manajemen Sosial Media</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Tab "Dashboard & Proyeksi"</strong> — Tab aktif menampilkan analisis keuangan berbasis AI</li>
-          <li><strong>Tab "Manajemen SPP"</strong> — Klik untuk beralih ke manajemen invoice SPP</li>
-          <li><strong>Kartu Metrik (atas)</strong> — Total Terkumpul, Total Target, Tingkat Pembayaran (%), dan Tren Proyeksi</li>
-          <li><strong>Grafik Pembayaran</strong> — Garis hijau = data aktual, garis oranye = proyeksi AI. Menunjukkan tren pembayaran dari waktu ke waktu</li>
-          <li><strong>Detail Proyeksi (bawah)</strong> — 3 kartu prediksi 3 bulan ke depan dengan tingkat kepercayaan dan estimasi nominal</li>
-          <li><strong>Tombol "Refresh Data"</strong> — Klik untuk memperbarui data dan analisis AI</li>
+          <li><strong>Tombol Tambah Postingan</strong> - Klik untuk menambahkan postingan Instagram atau TikTok baru</li>
+          <li><strong>Kartu Postingan</strong> - Menampilkan sumber, caption, status aktif, dan urutan tampil</li>
+          <li><strong>Thumbnail/Cover</strong> - Preview cover manual atau fallback jika cover otomatis platform tidak tersedia</li>
+          <li><strong>Tombol Edit dan Hapus</strong> - Ubah detail postingan atau hapus postingan dari daftar</li>
         </ol>
       </div>
-
-      <h2>Tab Dashboard & Proyeksi</h2>
-      <p>Tab ini menampilkan analisis keuangan berbasis AI.</p>
-
-      <h3>Informasi yang Ditampilkan:</h3>
       <ul>
-        <li><strong>Total Terkumpul:</strong> Jumlah pembayaran SPP yang sudah diterima</li>
-        <li><strong>Total Target:</strong> Target pembayaran yang diharapkan</li>
-        <li><strong>Tingkat Pembayaran:</strong> Persentase siswa yang sudah membayar</li>
-        <li><strong>Tren Proyeksi:</strong> Prediksi tren pembayaran ke depan</li>
-        <li><strong>Grafik Pembayaran:</strong> Visualisasi data aktual vs proyeksi AI</li>
-        <li><strong>Detail Proyeksi:</strong> Prediksi 3 bulan ke depan dengan tingkat kepercayaan</li>
+        <li><strong>Sumber:</strong> Pilih Instagram atau TikTok.</li>
+        <li><strong>URL Postingan:</strong> Tautan postingan asli dari Instagram atau TikTok.</li>
+        <li><strong>Kode Embed:</strong> Opsional, digunakan jika ingin menempelkan kode embed resmi dari platform.</li>
+        <li><strong>Thumbnail/Cover:</strong> Gambar cover khusus agar kartu sosial media tetap rapi jika cover otomatis dari platform tidak tersedia.</li>
+        <li><strong>Caption:</strong> Keterangan singkat yang tampil di kartu sosial media.</li>
+        <li><strong>Urutan Tampil:</strong> Menentukan posisi postingan di website publik.</li>
+        <li><strong>Status Aktif:</strong> Menentukan apakah postingan tampil di website publik.</li>
       </ul>
 
-      <h3>Cara Refresh Data:</h3>
-      <ol>
-        <li>Klik tombol <strong>"Refresh Data"</strong> di pojok kanan atas</li>
-        <li>Tunggu proses analisis selesai (beberapa detik)</li>
-        <li>Data akan diperbarui dengan informasi terbaru</li>
-      </ol>
-
-      <h2>Tab Manajemen SPP</h2>
-      <p>Kelola invoice SPP siswa secara manual.</p>
-
-      <h3>Fitur:</h3>
-      <ul>
-        <li><strong>Daftar Invoice:</strong> Lihat semua invoice dengan filter status</li>
-        <li><strong>Tambah Invoice:</strong> Buat invoice baru untuk siswa</li>
-        <li><strong>Edit Invoice:</strong> Ubah jumlah, jatuh tempo, atau status</li>
-        <li><strong>Hapus Invoice:</strong> Hapus invoice yang salah</li>
-        <li><strong>Filter & Cari:</strong> Filter berdasarkan status dan cari berdasarkan nama/keterangan</li>
-      </ul>
-
-      <h3>Cara Membuat Invoice:</h3>
-      <ol>
-        <li>Klik tab <strong>"Manajemen SPP"</strong></li>
-        <li>Klik tombol <strong>"Tambah Invoice"</strong></li>
-        <li>Isi form:
-          <ul>
-            <li><strong>Siswa:</strong> Pilih siswa dari dropdown</li>
-            <li><strong>Jumlah:</strong> Nominal tagihan (contoh: 500000)</li>
-            <li><strong>Jatuh Tempo:</strong> Tanggal jatuh tempo</li>
-            <li><strong>Keterangan:</strong> Deskripsi (contoh: "SPP Bulanan")</li>
-            <li><strong>Status:</strong> Pending, Lunas, atau Terlambat</li>
-          </ul>
-        </li>
-        <li>Klik <strong>"Tambah Invoice"</strong></li>
+      <h2>6.2 Cara Menambah Postingan Sosial Media</h2>
+      <ol class="steps">
+        <li>Klik menu <strong>Sosial Media</strong> di sidebar admin.</li>
+        <li>Klik tombol tambah postingan.</li>
+        <li>Pilih sumber postingan, lalu masukkan URL Instagram atau TikTok.</li>
+        <li>Isi caption dan urutan tampil.</li>
+        <li>Upload thumbnail manual jika cover otomatis dari platform tidak muncul atau kurang sesuai.</li>
+        <li>Aktifkan status postingan, lalu klik <strong>Simpan</strong>.</li>
       </ol>
 
       <div class="info-box warning">
-        <p class="info-box-title">⚠️ Perhatian</p>
-        <p>Jika tidak ada siswa aktif, tombol "Tambah Invoice" akan dinonaktifkan. Tambahkan siswa terlebih dahulu di menu Akademik → Daftar Siswa.</p>
+        <p class="info-box-title">Catatan</p>
+        <p>Cover otomatis dari Instagram atau TikTok dapat gagal tampil karena pembatasan dari platform. Jika hal ini terjadi, gunakan thumbnail manual agar tampilan galeri tetap konsisten.</p>
       </div>
-
-      <h3>Status Invoice:</h3>
-      <ul>
-        <li><strong>Pending:</strong> Invoice belum dibayar (warna kuning)</li>
-        <li><strong>Lunas:</strong> Invoice sudah dibayar (warna hijau)</li>
-        <li><strong>Terlambat:</strong> Invoice melewati jatuh tempo (warna merah)</li>
-      </ul>
     </section>
-
     <!-- Section 7: Galeri -->
     <section id="galeri" class="section">
       <h1>7. Galeri Media</h1>
@@ -1034,19 +774,19 @@
         <p class="screenshot-caption">Gambar: Halaman Galeri Foto Kegiatan Sekolah</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Tombol "Upload Foto"</strong> — Klik untuk mengunggah foto baru dari komputer</li>
-          <li><strong>Grid Foto</strong> — Tampilan thumbnail semua foto yang telah diunggah</li>
-          <li><strong>Caption Foto</strong> — Teks keterangan yang muncul di bawah setiap foto</li>
-          <li><strong>Tombol Edit (ikon pensil)</strong> — Klik untuk mengubah caption atau urutan foto</li>
-          <li><strong>Tombol Hapus (ikon tong sampah)</strong> — Klik untuk menghapus foto dari galeri</li>
+          <li><strong>Tombol "Upload Foto"</strong> - Klik untuk mengunggah foto baru dari komputer</li>
+          <li><strong>Grid Foto</strong> - Tampilan thumbnail semua foto yang telah diunggah</li>
+          <li><strong>Caption Foto</strong> - Teks keterangan yang muncul di bawah setiap foto</li>
+          <li><strong>Tombol Edit (ikon pensil)</strong> - Klik untuk mengubah caption atau urutan foto</li>
+          <li><strong>Tombol Hapus (ikon tong sampah)</strong> - Klik untuk menghapus foto dari galeri</li>
         </ol>
       </div>
 
       <h3>Cara Upload Foto:</h3>
       <ol>
-        <li>Klik menu <strong>Galeri Media → Foto</strong></li>
+        <li>Klik menu <strong>Galeri Media > Foto</strong></li>
         <li>Klik tombol <strong>"Upload Foto"</strong></li>
         <li>Pilih file foto (format: JPG, PNG, WebP)</li>
         <li>Isi caption/keterangan foto</li>
@@ -1067,7 +807,7 @@
 
       <h3>Cara Tambah Video:</h3>
       <ol>
-        <li>Klik menu <strong>Galeri Media → Video</strong></li>
+        <li>Klik menu <strong>Galeri Media > Video</strong></li>
         <li>Klik tombol <strong>"Tambah Video"</strong></li>
         <li>Masukkan URL video (YouTube atau Vimeo)</li>
         <li>Isi judul dan deskripsi</li>
@@ -1095,14 +835,14 @@
         <p class="screenshot-caption">Gambar: Halaman Pengaturan Profil Sekolah</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Identitas Sekolah</strong> — Isi nama sekolah, NPSN, alamat, telepon, email, dan akreditasi</li>
-          <li><strong>Kepala Sekolah</strong> — Isi nama dan NIP kepala sekolah (ditampilkan di rapor)</li>
-          <li><strong>Visi & Misi</strong> — Tulis visi dan misi sekolah untuk website dan dokumen resmi</li>
-          <li><strong>Logo Sekolah</strong> — Klik "Pilih File Logo" untuk upload logo (PNG/JPG, maks 2MB)</li>
-          <li><strong>Pengaturan Raport</strong> — Atur teks header dan footer yang muncul di setiap halaman rapor PDF</li>
-          <li><strong>Tombol "Simpan Profil"</strong> (kanan atas) — Klik untuk menyimpan semua perubahan</li>
+          <li><strong>Identitas Sekolah</strong> - Isi nama sekolah, NPSN, alamat, telepon, email, dan akreditasi</li>
+          <li><strong>Kepala Sekolah</strong> - Isi nama dan NIP kepala sekolah (ditampilkan di rapor)</li>
+          <li><strong>Visi & Misi</strong> - Tulis visi dan misi sekolah untuk website dan dokumen resmi</li>
+          <li><strong>Logo Sekolah</strong> - Klik "Pilih File Logo" untuk upload logo (PNG/JPG, maks 2MB)</li>
+          <li><strong>Pengaturan Raport</strong> - Atur teks header dan footer yang muncul di setiap halaman rapor PDF</li>
+          <li><strong>Tombol "Simpan Profil"</strong> (kanan atas) - Klik untuk menyimpan semua perubahan</li>
         </ol>
       </div>
 
@@ -1136,14 +876,14 @@
 
       <h3>Cara Mengedit Profil:</h3>
       <ol>
-        <li>Klik menu <strong>Pengaturan → Profil Sekolah</strong></li>
+        <li>Klik menu <strong>Pengaturan > Profil Sekolah</strong></li>
         <li>Isi atau ubah informasi pada form</li>
         <li>Untuk upload logo, klik tombol "Pilih File Logo"</li>
         <li>Klik <strong>"Simpan Profil"</strong> di pojok kanan atas</li>
       </ol>
 
       <div class="info-box success">
-        <p class="info-box-title">💡 Tips</p>
+        <p class="info-box-title">Tips</p>
         <p>Logo yang direkomendasikan: format PNG dengan latar transparan, ukuran minimal 200x200 pixel, rasio 1:1 (persegi).</p>
       </div>
 
@@ -1155,13 +895,13 @@
         <p class="screenshot-caption">Gambar: Halaman Manajemen Pengguna</p>
       </div>
       <div class="annotation-list">
-        <h5>📌 Petunjuk Elemen:</h5>
+        <h5>Petunjuk Elemen:</h5>
         <ol>
-          <li><strong>Tombol "+ Tambah Pengguna"</strong> — Klik untuk membuat akun pengguna baru</li>
-          <li><strong>Daftar Pengguna</strong> — Tabel berisi nama, email, peran (Super Admin/Admin/Editor/Viewer), dan status aktif</li>
-          <li><strong>Badge Peran</strong> — Warna berbeda untuk setiap peran (ungu = Super Admin, biru = Admin, dll)</li>
-          <li><strong>Tombol Edit (ikon pensil)</strong> — Ubah data pengguna, peran, atau reset password</li>
-          <li><strong>Tombol Hapus (ikon tong sampah)</strong> — Nonaktifkan akun pengguna</li>
+          <li><strong>Tombol "+ Tambah Pengguna"</strong> - Klik untuk membuat akun pengguna baru</li>
+          <li><strong>Daftar Pengguna</strong> - Tabel berisi nama, email, peran (Super Admin/Admin/Editor/Viewer), dan status aktif</li>
+          <li><strong>Badge Peran</strong> - Warna berbeda untuk setiap peran (ungu = Super Admin, biru = Admin, dll)</li>
+          <li><strong>Tombol Edit (ikon pensil)</strong> - Ubah data pengguna, peran, atau reset password</li>
+          <li><strong>Tombol Hapus (ikon tong sampah)</strong> - Nonaktifkan akun pengguna</li>
         </ol>
       </div>
 
@@ -1176,7 +916,7 @@
 
       <h3>Cara Menambah Pengguna:</h3>
       <ol>
-        <li>Klik menu <strong>Pengaturan → Pengguna</strong></li>
+        <li>Klik menu <strong>Pengaturan > Pengguna</strong></li>
         <li>Klik tombol <strong>"Tambah Pengguna"</strong></li>
         <li>Isi form:
           <ul>
@@ -1191,7 +931,7 @@
 
       <h3>Peran Pengguna:</h3>
       <div class="feature-card">
-        <h4>🔐 Level Akses</h4>
+        <h4>Level Akses</h4>
         <ul>
           <li><strong>Super Admin:</strong> Akses penuh termasuk manajemen pengguna</li>
           <li><strong>Admin:</strong> Akses ke semua fitur operasional</li>
@@ -1201,7 +941,7 @@
       </div>
 
       <div class="info-box warning">
-        <p class="info-box-title">⚠️ Perhatian</p>
+        <p class="info-box-title">Perhatian</p>
         <p>Jangan nonaktifkan akun Anda sendiri. Sistem akan memblokir upaya menonaktifkan akun yang sedang digunakan.</p>
       </div>
     </section>
@@ -1226,30 +966,13 @@
         <li>Update berita secara berkala untuk menjaga website tetap fresh</li>
       </ul>
 
-      <h2>Pengelolaan Data Siswa</h2>
+      <h2>Pengelolaan Profil, Galeri, dan Sosial Media</h2>
       <ul>
-        <li>Verifikasi data siswa sebelum menyimpan</li>
-        <li>Gunakan fitur import dari PPDB untuk efisiensi</li>
-        <li>Nonaktifkan siswa yang sudah lulus atau pindah (jangan hapus)</li>
-        <li>Backup data secara berkala (export ke Excel)</li>
+        <li>Pastikan profil pengajar sudah lengkap sebelum diaktifkan.</li>
+        <li>Gunakan foto dan thumbnail dengan kualitas baik agar website publik terlihat profesional.</li>
+        <li>Review postingan sosial media sebelum ditampilkan di website publik.</li>
+        <li>Nonaktifkan konten yang sudah tidak relevan daripada langsung menghapus data.</li>
       </ul>
-
-      <h2>Pengelolaan Rapor</h2>
-      <ul>
-        <li>Isi nilai secara bertahap dan simpan secara berkala</li>
-        <li>Gunakan fitur AI untuk membantu membuat catatan wali kelas</li>
-        <li>Preview rapor sebelum finalisasi untuk memastikan tidak ada kesalahan</li>
-        <li>Finalisasi rapor hanya setelah semua data diverifikasi</li>
-      </ul>
-
-      <h2>Pengelolaan Keuangan</h2>
-      <ul>
-        <li>Buat invoice SPP di awal bulan</li>
-        <li>Update status pembayaran segera setelah menerima pembayaran</li>
-        <li>Monitor invoice yang terlambat dan follow up ke orang tua</li>
-        <li>Gunakan proyeksi AI untuk perencanaan keuangan</li>
-      </ul>
-
       <h2>Performa Sistem</h2>
       <ul>
         <li>Gunakan koneksi internet yang stabil</li>
@@ -1259,16 +982,18 @@
       </ul>
 
       <div class="info-box success">
-        <p class="info-box-title">✨ Kesimpulan</p>
+        <p class="info-box-title">Kesimpulan</p>
         <p>Sistem CMS ini dirancang untuk memudahkan pengelolaan sekolah secara digital. Dengan mengikuti panduan ini, Anda dapat memanfaatkan semua fitur secara optimal. Jika ada pertanyaan atau kendala, jangan ragu untuk menghubungi administrator sistem.</p>
       </div>
 
       <div class="page-footer">
         <p><strong>Panduan Penggunaan CMS SDS Taman Harapan</strong></p>
-        <p>Versi 1.1 - Juni 2026</p>
+        <p>Versi 1.2 - Juni 2026</p>
         <p>Dokumen ini bersifat rahasia dan hanya untuk penggunaan internal sekolah.</p>
       </div>
     </section>
   </div>
 </body>
 </html>
+
+
