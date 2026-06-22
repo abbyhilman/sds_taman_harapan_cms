@@ -27,8 +27,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, password, full_name, role } = body;
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const normalizedFullName = typeof full_name === 'string' ? full_name.trim() : '';
+    const normalizedRole = role || 'viewer';
 
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       return NextResponse.json(
         { error: 'Email dan password wajib diisi.' },
         { status: 400 }
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     const validRoles = ['super_admin', 'admin', 'editor', 'viewer'];
-    if (role && !validRoles.includes(role)) {
+    if (!validRoles.includes(normalizedRole)) {
       return NextResponse.json(
         { error: 'Role tidak valid.' },
         { status: 400 }
@@ -51,17 +54,19 @@ export async function POST(request: NextRequest) {
     }
 
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: normalizedEmail,
       password,
       email_confirm: true,
       user_metadata: {
-        full_name: full_name || '',
-        role: role || 'viewer',
+        full_name: normalizedFullName,
       },
     });
 
     if (error) {
-      if (error.message.includes('already registered')) {
+      if (
+        error.message.includes('already registered') ||
+        error.message.includes('already been registered')
+      ) {
         return NextResponse.json(
           { error: 'Email sudah terdaftar.' },
           { status: 409 }
@@ -70,21 +75,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (data.user && (full_name || role)) {
-      await supabaseAdmin
-        .from('profiles')
-        .update({
-          full_name: full_name || '',
-          role: role || 'viewer',
-        })
-        .eq('id', data.user.id);
+    if (!data.user) {
+      return NextResponse.json(
+        { error: 'Gagal membuat pengguna.' },
+        { status: 500 }
+      );
     }
 
-    const { data: profile } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
+      .upsert(
+        {
+          id: data.user.id,
+          email: normalizedEmail,
+          full_name: normalizedFullName,
+          role: normalizedRole,
+          is_active: true,
+        },
+        { onConflict: 'id' }
+      )
       .select('id, email, full_name, role, is_active, created_at, updated_at')
-      .eq('id', data.user.id)
       .single();
+
+    if (profileError) {
+      await supabaseAdmin.auth.admin.deleteUser(data.user.id);
+      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true, data: profile }, { status: 201 });
   } catch {
